@@ -39,6 +39,13 @@
         .control-panel { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
         .panel-title { font-size: 15px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #1e293b; display: flex; align-items: center; justify-content: space-between; }
         
+        /* Custom Multi-Truck Selection Panel */
+        .custom-truck-panel { background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 15px; margin-top: 15px; display: none; }
+        .truck-checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 10px; }
+        .truck-checkbox-card { display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .truck-checkbox-card:hover { background: #f1f5f9; }
+        .truck-checkbox-card input[type="checkbox"] { width: 18px; height: 18px; margin: 0; cursor: pointer; }
+
         .station-stop-card { background: #ffffff; border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .station-stop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .station-stop-badge { font-size: 12px; font-weight: 600; color: #475569; background: #e2e8f0; padding: 4px 10px; border-radius: 6px; }
@@ -47,16 +54,12 @@
         .tank-input-row { display: grid; grid-template-columns: 85px 120px 130px 130px 110px; gap: 10px; align-items: center; background: #fcfcfc; border: 1px solid #edf2f7; padding: 8px 12px; border-radius: 6px; margin-top: 8px; font-size: 13px; }
         .tank-type-tag { font-weight: 600; color: #1e293b; background: #e2e8f0; padding: 4px 8px; border-radius: 4px; text-align: center; }
 
-        /* 🎨 Minimal Pastel Tank Gauges (ปรับแก้ตำแหน่งต่อยอดอย่างสมบูรณ์) */
+        /* Minimal Pastel Tank Gauges */
         .tank-visual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 15px; margin-top: 15px; }
         .tank-gauge-card { background: #ffffff; border: 1px solid #e9ecef; border-radius: 12px; padding: 15px 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; align-items: center; position: relative; }
-        
         .tank-cylinder-container { position: relative; width: 56px; height: 130px; background: #f1f5f9; border: 2px solid #cbd5e1; border-radius: 28px; overflow: hidden; margin: 10px 0; }
         
-        /* น้ำมันเดิม ยึดฐานล่างสุด */
         .tank-liquid-base { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; transition: height 0.6s ease; border-radius: 0 0 24px 24px; z-index: 1; }
-        
-        /* น้ำมันเติมเพิ่ม ยึดต่อจากระดับเดิมขึ้นไปด้านบน */
         .tank-liquid-added { position: absolute; left: 0; right: 0; width: 100%; background-color: var(--pastel-blue); transition: all 0.6s ease; border-top: 1px dashed #0284c7; z-index: 2; }
         
         .tank-deadstock-line { position: absolute; bottom: 10%; left: 0; right: 0; height: 1px; border-top: 1px dashed #ef4444; z-index: 3; pointer-events: none; }
@@ -161,15 +164,23 @@
                 </div>
                 <div>
                     <label>🚛 นโยบายการใช้รถขนส่ง</label>
-                    <select id="opt_fleet_mode" class="select-db">
-                        <option value="all">🚚 จัดเต็มกองยาน (เพิ่มรถอัตโนมัติเมื่อจำเป็น)</option>
-                        <option value="first">🚛 ใช้เฉพาะคันแรก (Single Truck Only)</option>
+                    <select id="opt_fleet_mode" class="select-db" onchange="handleFleetModeChange(this.value)">
+                        <option value="auto">⚡ Auto (จัดสรรอัตโนมัติ: ดึงรถเท่าที่จำเป็น)</option>
                     </select>
                 </div>
                 <div>
                     <label>🎯 เกณฑ์ Stock Day ขั้นต่ำที่ต้องการ (Target Days: วัน)</label>
                     <input type="number" id="st_target_days" value="5.0" step="0.5" min="1" max="30" style="background:#fff; font-weight:600; color:#0369a1;" placeholder="กำหนดจำนวนวัน">
                 </div>
+            </div>
+
+            <!-- แผงสำหรับติ๊กเลือกรถหลายคัน (เช่น เลือกรถ 2 คันพร้อมกัน) -->
+            <div id="custom_truck_panel" class="custom-truck-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="font-size:13.5px; color:#1e293b;">🚛 เลือกรายการรถขนส่งที่ต้องการใช้วิ่งร่วมกัน (Multi-Truck Dispatch):</strong>
+                    <span id="custom_selected_summary" style="font-size:12.5px; color:#0284c7; font-weight:600;">เลือกแล้ว 0 คัน (0 L)</span>
+                </div>
+                <div id="truck_checkbox_grid" class="truck-checkbox-grid"></div>
             </div>
 
             <div class="divider" style="margin: 15px 0;"></div>
@@ -497,7 +508,6 @@
 
     async function fetchDataFromSheets() {
         try {
-            // ดึง Tank_Logs ให้เสร็จก่อนเสมอ
             try {
                 let resLogs = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Tank_Logs!A2:E' });
                 tankLogsData = resLogs.result.values || [];
@@ -525,8 +535,80 @@
             } catch(e) { console.warn("Load Trucks error:", e); }
 
             renderFleetTable();
+            updateFleetModeDropdown();
             initInitialStop();
         } catch (err) { console.error(err); }
+    }
+
+    // อัปเดต Dropdown นโยบายรถ (Auto, รายคัน 1, 2, ... และ โหมดเลือกหลายคันเอง)
+    function updateFleetModeDropdown() {
+        let select = document.getElementById('opt_fleet_mode');
+        if (!select) return;
+        let currentVal = select.value;
+
+        let optionsHTML = `
+            <option value="auto">⚡ Auto (จัดสรรอัตโนมัติ: ดึงรถเท่าที่จำเป็น)</option>
+            <option value="custom">🛠️ กำหนดเลือกรถเอง (เลือก 2 คัน หรือหลายคัน...)</option>
+        `;
+        fleetList.forEach((truck, index) => {
+            optionsHTML += `<option value="${index}">🚛 [คันที่ ${index + 1}] ${truck.plate} (${truck.capacity.toLocaleString()}L)</option>`;
+        });
+
+        select.innerHTML = optionsHTML;
+        if (currentVal === "auto" || currentVal === "custom" || (parseInt(currentVal) < fleetList.length)) {
+            select.value = currentVal;
+        } else {
+            select.value = "auto";
+        }
+
+        renderTruckCheckboxGrid();
+        handleFleetModeChange(select.value);
+    }
+
+    // จัดการแสดง/ซ่อนแผง Checkbox เมื่อเปลี่ยนโหมด
+    function handleFleetModeChange(mode) {
+        let panel = document.getElementById('custom_truck_panel');
+        if (mode === 'custom') {
+            panel.style.display = 'block';
+        } else {
+            panel.style.display = 'none';
+        }
+    }
+
+    // เรนเดอร์กล่อง Checkbox เลือกรถอิสระ
+    function renderTruckCheckboxGrid() {
+        let grid = document.getElementById('truck_checkbox_grid');
+        if (!grid) return;
+        grid.innerHTML = "";
+
+        fleetList.forEach((t, i) => {
+            let label = document.createElement('label');
+            label.className = "truck-checkbox-card";
+            label.innerHTML = `
+                <input type="checkbox" class="truck-select-checkbox" value="${i}" onchange="updateCustomTruckSummary()">
+                <div>
+                    <strong style="font-size:13px; color:#1e293b;">คันที่ ${i+1}: ${t.plate}</strong><br>
+                    <span style="font-size:11.5px; color:#64748b;">${t.capacity.toLocaleString()} L (${t.compartments.length} ช่อง)</span>
+                </div>
+            `;
+            grid.appendChild(label);
+        });
+        updateCustomTruckSummary();
+    }
+
+    // สรุปยอดความจุของรถที่ติ๊กเลือก
+    function updateCustomTruckSummary() {
+        let checkboxes = document.querySelectorAll('.truck-select-checkbox:checked');
+        let totalCap = 0;
+        checkboxes.forEach(cb => {
+            let idx = parseInt(cb.value);
+            if (fleetList[idx]) totalCap += fleetList[idx].capacity;
+        });
+
+        let summary = document.getElementById('custom_selected_summary');
+        if (summary) {
+            summary.innerText = `เลือกแล้ว ${checkboxes.length} คัน (${totalCap.toLocaleString()} L)`;
+        }
     }
 
     function updateDropdown(elementId, dataList, defaultText) {
@@ -560,6 +642,7 @@
         let newTruck = { plate: plate, compartments: compArr, capacity: cap };
         fleetList.push(newTruck);
         renderFleetTable();
+        updateFleetModeDropdown();
 
         if (SPREADSHEET_ID) {
             try {
@@ -579,8 +662,9 @@
 
     async function removeTruckFromFleetAction(index) {
         if (fleetList.length <= 1) return alert("ต้องมีรถอย่างน้อย 1 คันในกองยาน");
-        fleetList.splice(index, 1);
+        let removed = fleetList.splice(index, 1);
         renderFleetTable();
+        updateFleetModeDropdown();
 
         if (SPREADSHEET_ID) {
             try {
@@ -785,7 +869,6 @@
         });
     }
 
-    // ดึงค่าล่าสุดที่ถูกเซฟไว้ใน Tank_Logs มาหยอดลงฟอร์ม
     function onStationStopSelected(cardId, stationIdx) {
         let tanksArea = document.getElementById(`${cardId}_tanks_area`);
         let timeLabel = document.getElementById(`${cardId}_time`);
@@ -804,7 +887,6 @@
         }
         if (specs.length === 0) specs = [{ type: 'G95', max: 10000 }];
 
-        // ค้นหา Log ล่าสุดของปั๊มนี้จากฐานข้อมูลแบบย้อนหลังจากล่างขึ้นบน
         let lastLog = null;
         for (let i = tankLogsData.length - 1; i >= 0; i--) {
             let logStId = (tankLogsData[i][1] || "").toString().trim();
@@ -957,7 +1039,6 @@
         return selectedStops;
     }
 
-    // 🎨 กราฟิกหลอดแก้วสองชั้น: น้ำมันสีฟ้าพาสเทลต่อยอดขึ้นจากระดับเดิมอย่างถูกต้อง
     function renderPastelTankGauges(selectedStops, timeStr, isAfterOptimization = false) {
         let section = document.getElementById('visual_gauges_section');
         let container = document.getElementById('visual_gauges_container');
@@ -1053,9 +1134,7 @@
                     <div class="tank-cylinder-container">
                         <div class="tank-deadstock-line"></div>
                         <div class="tank-deadstock-tag">10%</div>
-                        <!-- น้ำมันเดิม ยึดฐานล่างสุด -->
                         <div class="tank-liquid-base" style="height: ${basePercent}%; background-color: ${liquidBaseColor};"></div>
-                        <!-- น้ำมันเติมเพิ่ม ยึดต่อจากระดับเดิมขึ้นไปด้านบน -->
                         <div class="tank-liquid-added" style="bottom: ${basePercent}%; height: ${addedPercent}%;"></div>
                     </div>
                     <div class="tank-gauge-details">${detailsHTML}</div>
@@ -1071,7 +1150,6 @@
         section.style.display = "block";
     }
 
-    // Action 1: บันทึกระดับน้ำมัน
     async function saveTankLogsAction() {
         if (!SPREADSHEET_ID) return alert('กรุณาลงชื่อเข้าใช้ Google ก่อนครับ');
 
@@ -1128,11 +1206,12 @@
         calculateSalesPriorityOptimization(selectedStops, dpVal, targetDays);
     }
 
-    // Action 2: อัลกอริทึมจัดสรรตามลำดับความสำคัญยอดขายสูงสุดก่อน
+    // อัลกอริทึมจัดสรรตามลำดับความสำคัญยอดขายสูงสุดก่อน (รองรับโหมดเลือก 2 คัน หรือหลายคันแบบ Custom)
     function calculateSalesPriorityOptimization(selectedStops, selectedDepotIndex, targetDays) {
         let depot = depotData[selectedDepotIndex];
         let dpLat = parseFloat(depot[2]), dpLng = parseFloat(depot[3]), dpName = depot[1];
 
+        // คำนวณเส้นทาง
         let totalDistance = 0;
         let routeString = `${dpName}`;
         let currentLat = dpLat, currentLng = dpLng;
@@ -1149,8 +1228,30 @@
         document.getElementById('res_route').innerText = routeString;
         document.getElementById('res_distance').innerText = totalDistance.toFixed(2);
 
+        // 🚛 คัดเลือกกองยาน: Auto / Custom (เช่น ติ๊กเลือก 2 คัน) / เจาะจงคันเดียว
         let fleetMode = document.getElementById('opt_fleet_mode').value;
-        let activeFleet = (fleetMode === 'first') ? [fleetList[0]] : JSON.parse(JSON.stringify(fleetList));
+        let activeFleet = [];
+        
+        if (fleetMode === "auto") {
+            activeFleet = JSON.parse(JSON.stringify(fleetList));
+        } else if (fleetMode === "custom") {
+            let checkedBoxes = document.querySelectorAll('.truck-select-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                return alert("⚠️ คุณเลือกโหมดกำหนดเลือกรถเอง กรุณาติ๊กเลือกรถในกล่องด้านบนอย่างน้อย 1-2 คันครับ");
+            }
+            checkedBoxes.forEach(cb => {
+                let idx = parseInt(cb.value);
+                if (fleetList[idx]) activeFleet.push(JSON.parse(JSON.stringify(fleetList[idx])));
+            });
+        } else {
+            let specificIndex = parseInt(fleetMode);
+            if (!isNaN(specificIndex) && fleetList[specificIndex]) {
+                activeFleet = [ JSON.parse(JSON.stringify(fleetList[specificIndex])) ];
+            } else {
+                activeFleet = JSON.parse(JSON.stringify(fleetList));
+            }
+        }
+
         let totalFleetCap = activeFleet.reduce((sum, tr) => sum + tr.capacity, 0);
 
         let fleetCompartments = [];
@@ -1247,7 +1348,7 @@
                 }
 
                 if (remainingToSatisfy > 0) {
-                    item.allocations.push(`<span style="color:red; font-size:12px; font-weight:600;">⚠️ ยังขาดอีก ${remainingToSatisfy.toLocaleString()}L (รถไม่พอ)</span>`);
+                    item.allocations.push(`<span style="color:red; font-size:12px; font-weight:600;">⚠️ ยังขาดอีก ${remainingToSatisfy.toLocaleString()}L (ความจุรถที่เลือกไม่พอ)</span>`);
                 }
             } else {
                 item.allocations.push(`<span style="color:#777;">สต็อกพอสำหรับเกณฑ์ ${targetDays} วันแล้ว</span>`);
@@ -1291,17 +1392,15 @@
         if (totalDispatched === 0) {
             statusEl.innerHTML = `<span class="badge badge-warning">ระดับน้ำมันทุกถังพอสำหรับเกณฑ์ ${targetDays} วันแล้ว ไม่จำเป็นต้องปล่อยรถ</span>`;
         } else {
-            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดส่งเต็มประสิทธิภาพตาม Priority ยอดขาย: โหลดน้ำมันรวม ${totalDispatched.toLocaleString()} ลิตร (ใช้รถ ${usedCount} คัน: ${Array.from(usedTruckPlates).join(', ')})</span>`;
+            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดส่งตาม Priority ยอดขาย: โหลดน้ำมันรวม ${totalDispatched.toLocaleString()} ลิตร (ใช้รถ ${usedCount} คัน: ${Array.from(usedTruckPlates).join(', ')})</span>`;
         }
         
         document.getElementById('dashboard_result').style.display = 'block';
 
-        // 🎨 แสดงกราฟิกหลอดสองชั้น (น้ำมันสีฟ้าพาสเทลต่อยอดจากระดับเดิมขึ้นด้านบน)
         let now = new Date();
         let timeStr = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH');
         renderPastelTankGauges(selectedStops, timeStr, true);
 
-        // แสดงผลสูตรแบบ LaTeX ในกล่อง Advanced
         let advBox = document.getElementById('advanced_info');
         advBox.innerHTML = `
             <h4 style="margin-top:0; color: #1e293b;">📐 แบบจำลองคณิตศาสตร์: Sales-Weighted Priority & Full-Payload Optimization (LaTeX)</h4>
@@ -1327,7 +1426,7 @@
 
             <strong>4. สรุปผลลัพธ์การจัดสรรรอบนี้:</strong><br>
             - ปริมาณน้ำมันจัดส่งรวม: \\( \\mathbf{${totalDispatched.toLocaleString()} \\text{ L}} \\)<br>
-            - จำนวนรถบรรทุกที่ใช้งาน: \\( \\mathbf{${usedCount} \\text{ คัน}} \\) จากความจุกองยานทั้งหมด \\( \\mathbf{${totalFleetCap.toLocaleString()} \\text{ L}} \\)
+            - จำนวนรถบรรทุกที่ใช้งานจริง: \\( \\mathbf{${usedCount} \\text{ คัน}} \\) จากกองยานที่ระบุ \\( \\mathbf{${totalFleetCap.toLocaleString()} \\text{ L}} \\)
         `;
 
         if (window.MathJax) {
