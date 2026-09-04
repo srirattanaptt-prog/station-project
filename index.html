@@ -98,8 +98,9 @@
         .badge-success { background: #d4edda; color: #155724; }
         .badge-warning { background: #fff3cd; color: #856404; }
         .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-priority { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
         
-        .adv-box { margin-top: 15px; padding: 20px; background: #f8f9fa; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 13px; line-height: 1.6; color: #475569; }
+        .adv-box { margin-top: 15px; padding: 20px; background: #f8f9fa; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 13px; line-height: 1.7; color: #334155; }
     </style>
 	
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
@@ -133,9 +134,9 @@
 
     <!-- MAIN TAB 1: Optimization (หน้าแรก) -->
     <div id="tab-result" class="tab-content active">
-        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Stock-Days & Full-Payload Optimization)</h3>
+        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Sales-Weighted Priority & Full-Payload)</h3>
         <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">
-            ระบบจัดสรรให้เต็มคันรถที่สุด (Full Payload) โดยรักษาค่า Stock Day ให้อยู่ในระดับปลอดภัยสูงสุด และเพิ่มรถอัตโนมัติหากจำเป็น
+            จัดสรรช่องรถบรรทุกแบบให้ความสำคัญกับ <strong>ผลิตภัณฑ์ที่มียอดขายสูงสุดก่อน (High Sales Velocity Priority)</strong> เพื่อรักษาเสถียรภาพสต็อกอย่างคุ้มค่าที่สุด
         </p>
         
         <div class="control-panel">
@@ -196,13 +197,14 @@
                 <p style="margin:5px 0;"><strong>สถานะ Constraint & กองยาน:</strong> <span id="res_status"></span></p>
             </div>
             
-            <h4 style="margin: 25px 0 10px 0;">📊 แผนการโหลดและจ่ายน้ำมัน (จัดสรรเต็มช่องรถเพื่อประสิทธิภาพสูงสุด)</h4>
+            <h4 style="margin: 25px 0 10px 0;">📊 แผนการโหลดและจ่ายน้ำมัน (จัดสรรเรียงตามยอดขายสูงสุดก่อน)</h4>
             <table class="result-table">
                 <thead>
                     <tr>
+                        <th style="width: 70px; text-align:center;">Priority</th>
                         <th>ปั๊ม / ชนิดน้ำมัน</th>
+                        <th>ยอดขายเฉลี่ย (L/วัน)</th>
                         <th>Stock Day (ก่อน ➔ หลังเติม)</th>
-                        <th>ความจุถังปั๊ม / ว่างรับได้</th>
                         <th>จัดส่งจริง (ลิตร)</th>
                         <th>การจัดสรรลงรถบรรทุก (Fleet Allocation)</th>
                     </tr>
@@ -210,7 +212,7 @@
                 <tbody id="res_table_body"></tbody>
             </table>
 
-            <button class="btn" style="margin-top: 25px; background-color: #e2e8f0; color: #475569;" onclick="toggleAdvancedInfo()">🔍 Advanced: ดูสูตรการคำนวณ Stock Day & Full Payload Model</button>
+            <button class="btn" style="margin-top: 25px; background-color: #e2e8f0; color: #475569;" onclick="toggleAdvancedInfo()">🔍 Advanced: ดูสูตรการคำนวณ Priority & Full Payload Model (LaTeX)</button>
             
             <div id="advanced_info" class="adv-box" style="display:none;"></div>
         </div>
@@ -293,7 +295,7 @@
             <button class="btn btn-submit" onclick="saveDepot()">💾 บันทึกคลังนี้ลง Google Sheets</button>
         </div>
 
-        <!-- SUB-TAB 3: กองยานรถขนส่ง (บันทึกและโหลดจาก Database จริง) -->
+        <!-- SUB-TAB 3: กองยานรถขนส่ง -->
         <div id="sub-truck" class="sub-tab-content">
             <h3 style="margin-top:0;">ข้อมูลกองยานพาหนะขนส่ง (Fleet Management Database)</h3>
             <p style="font-size:13.5px; color:var(--text-light); margin-bottom:20px;">ข้อมูลรถบรรทุกทุกคันจะถูกบันทึกลง Google Sheets แท็บ `Trucks` โดยอัตโนมัติ</p>
@@ -393,10 +395,6 @@
             alert("⚠️ ระบบ Google Sign-in ไม่รองรับการเปิดไฟล์ตรงๆ (file://)\n\nวิธีแก้: กรุณารันผ่าน Local Server หรืออัปโหลดขึ้น GitHub Pages ครับ");
             return;
         }
-        if (CLIENT_ID === 'YOUR_CLIENT_ID.apps.googleusercontent.com' || CLIENT_ID.trim() === '') {
-            alert("⚠️ คุณยังไม่ได้ตั้งค่า CLIENT_ID กรุณานำ OAuth Client ID มาใส่ในโค้ดครับ");
-            return;
-        }
         if (!tokenClient) {
             alert("⏳ ระบบกำลังโหลดการเชื่อมต่อ Google API กรุณารอสักครู่แล้วกดอีกครั้งครับ");
             return;
@@ -427,9 +425,12 @@
 
             if (files && files.length > 0) {
                 SPREADSHEET_ID = files[0].id;
-                await ensureTrucksSheetExists();
+                await ensureSheetExists("Tank_Logs", [["Timestamp", "รหัสปั๊ม", "ชื่อปั๊ม", "ปริมาณน้ำมันคงเหลือ & ยอดขาย (JSON)", "หมายเหตุ"]]);
+                await ensureSheetExists("Trucks", [
+                    ["ทะเบียนรถ", "ความจุรวม (ลิตร)", "ขนาดช่องบรรทุก (JSON)"],
+                    ["1กข-1234", 16000, "[4000,4000,4000,4000]"]
+                ]);
             } else {
-                // สร้าง Google Sheets พร้อม 4 แท็บครบวงจร: Stations, Depots, Tank_Logs, Trucks
                 let createRes = await gapi.client.sheets.spreadsheets.create({
                     resource: {
                         properties: { title: "Logistics_Optimization_DB" },
@@ -464,30 +465,27 @@
         }
     }
 
-    async function ensureTrucksSheetExists() {
+    async function ensureSheetExists(sheetTitle, defaultRows) {
         try {
             let res = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
             let sheetNames = res.result.sheets.map(s => s.properties.title);
-            if (!sheetNames.includes("Trucks")) {
+            if (!sheetNames.includes(sheetTitle)) {
                 await gapi.client.sheets.spreadsheets.batchUpdate({
                     spreadsheetId: SPREADSHEET_ID,
                     resource: {
-                        requests: [{ addSheet: { properties: { title: "Trucks" } } }]
+                        requests: [{ addSheet: { properties: { title: sheetTitle } } }]
                     }
                 });
-                await gapi.client.sheets.spreadsheets.values.append({
-                    spreadsheetId: SPREADSHEET_ID,
-                    range: "Trucks!A1:C",
-                    valueInputOption: "USER_ENTERED",
-                    resource: {
-                        values: [
-                            ["ทะเบียนรถ", "ความจุรวม (ลิตร)", "ขนาดช่องบรรทุก (JSON)"],
-                            ["1กข-1234", 16000, "[4000,4000,4000,4000]"]
-                        ]
-                    }
-                });
+                if (defaultRows && defaultRows.length > 0) {
+                    await gapi.client.sheets.spreadsheets.values.append({
+                        spreadsheetId: SPREADSHEET_ID,
+                        range: `${sheetTitle}!A1`,
+                        valueInputOption: "USER_ENTERED",
+                        resource: { values: defaultRows }
+                    });
+                }
             }
-        } catch(e) { console.warn("Ensure Trucks sheet error:", e); }
+        } catch(e) { console.warn(`Ensure ${sheetTitle} sheet error:`, e); }
     }
 
     async function fetchDataFromSheets() {
@@ -502,11 +500,10 @@
             updateDropdown('opt_depot_select', depotData, 'เลือกคลังต้นทาง');
 
             try {
-                let resLogs = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Tank_Logs!A2:D' });
+                let resLogs = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Tank_Logs!A2:E' });
                 tankLogsData = resLogs.result.values || [];
             } catch(e) { tankLogsData = []; }
 
-            // ดึงข้อมูลรถบรรทุก (Trucks) จาก Google Sheets จริง
             try {
                 let resTrucks = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Trucks!A2:C' });
                 truckData = resTrucks.result.values || [];
@@ -537,9 +534,7 @@
         });
     }
 
-    // ==========================================
-    // 🚚 ระบบจัดการ Fleet รถขนส่ง (บันทึกลง Database จริง)
-    // ==========================================
+    // ระบบจัดการ Fleet
     function updateTruckCap() {
         let compArr = document.getElementById('tr_compartments').value.split('/');
         document.getElementById('tr_capacity').value = compArr.reduce((sum, val) => sum + (parseInt(val) || 0), 0);
@@ -569,7 +564,7 @@
                 alert(`✅ บันทึกรถทะเบียน ${plate} ลง Google Sheets สำเร็จ!`);
             } catch(e) {
                 console.error("Save truck to Sheets failed:", e);
-                alert("บันทึกลง Google Sheets ไม่สำเร็จ แต่ใช้งานในเซสชันนี้ได้");
+                alert("บันทึกลง Google Sheets ไม่สำเร็จ");
             }
         }
     }
@@ -581,7 +576,6 @@
 
         if (SPREADSHEET_ID) {
             try {
-                // เขียนทับชีต Trucks ใหม่ทั้งหมดตาม fleetList ล่าสุด
                 let rows = [["ทะเบียนรถ", "ความจุรวม (ลิตร)", "ขนาดช่องบรรทุก (JSON)"]];
                 fleetList.forEach(t => rows.push([ t.plate, t.capacity, JSON.stringify(t.compartments) ]));
                 
@@ -1018,6 +1012,8 @@
             return alert("⚠️ กรุณาเลือก 'ปั๊มปลายทาง' ที่ต้องการบันทึกระดับน้ำมันอย่างน้อย 1 ปั๊มครับ");
         }
 
+        await ensureSheetExists("Tank_Logs", [["Timestamp", "รหัสปั๊ม", "ชื่อปั๊ม", "ปริมาณน้ำมันคงเหลือ & ยอดขาย (JSON)", "หมายเหตุ"]]);
+
         let now = new Date();
         let timeStr = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH');
         let logRows = [];
@@ -1040,8 +1036,8 @@
             renderPastelTankGauges(selectedStops, timeStr);
             alert(`✅ บันทึกระดับน้ำมันคงเหลือและยอดขายเฉลี่ยสำเร็จ!\nอัปเดตข้อมูลเมื่อ: ${timeStr}`);
         } catch(err) {
-            console.error("Save log error:", err);
-            alert("บันทึกระดับน้ำมันไม่สำเร็จ");
+            console.error("Save log error details:", err);
+            alert("บันทึกระดับน้ำมันไม่สำเร็จ: " + (err.result?.error?.message || err.message));
         }
     }
 
@@ -1061,17 +1057,17 @@
             return alert("⚠️ กรุณาเลือก 'ปั๊มปลายทาง' อย่างน้อย 1 ปั๊มเพื่อจัดส่งครับ");
         }
 
-        calculateFullPayloadOptimization(selectedStops, dpVal, targetDays);
+        calculateSalesPriorityOptimization(selectedStops, dpVal, targetDays);
     }
 
     // =========================================================================
-    // ⚙️ อัลกอริทึมจัดเต็มรถ (Full-Payload Strategy) + ป้องกันปัญหาเศษตกค้าง
+    // ⚙️ อัลกอริทึมจัดสรรตามลำดับความสำคัญยอดขายสูงสุดก่อน (Sales Priority Dispatch)
     // =========================================================================
-    function calculateFullPayloadOptimization(selectedStops, selectedDepotIndex, targetDays) {
+    function calculateSalesPriorityOptimization(selectedStops, selectedDepotIndex, targetDays) {
         let depot = depotData[selectedDepotIndex];
         let dpLat = parseFloat(depot[2]), dpLng = parseFloat(depot[3]), dpName = depot[1];
 
-        // 1. คำนวณเส้นทางไป-กลับ
+        // คำนวณระยะทางไป-กลับ
         let totalDistance = 0;
         let routeString = `${dpName}`;
         let currentLat = dpLat, currentLng = dpLng;
@@ -1088,7 +1084,7 @@
         document.getElementById('res_route').innerText = routeString;
         document.getElementById('res_distance').innerText = totalDistance.toFixed(2);
 
-        // 2. เตรียมช่องบรรทุกของทั้งกองยาน
+        // จัดเตรียมกองยาน
         let fleetMode = document.getElementById('opt_fleet_mode').value;
         let activeFleet = (fleetMode === 'first') ? [fleetList[0]] : JSON.parse(JSON.stringify(fleetList));
         let totalFleetCap = activeFleet.reduce((sum, tr) => sum + tr.capacity, 0);
@@ -1101,7 +1097,7 @@
                     truckIndex: truckIdx + 1,
                     compIdx: cIdx + 1,
                     nominalCapacity: cap,
-                    reducedCapacity: Math.max(0, cap - 1000), // ลดได้ 1,000 ลิตร
+                    reducedCapacity: Math.max(0, cap - 1000),
                     isAssigned: false,
                     assignedLoad: 0,
                     assignedTo: ""
@@ -1109,13 +1105,10 @@
             });
         });
 
-        let tableBody = "", totalDispatched = 0;
-        let usedTruckPlates = new Set();
-
-        // 3. จัดสรรทีละถังตามเกณฑ์ความปลอดภัยและเติมเต็มช่องที่สุด (Full Load Strategy)
+        // รวบรวมรายการถังทั้งหมดมาทำ Sales-Weighted Priority Sorting
+        let tankDemandList = [];
         selectedStops.forEach((st) => {
             st.tanks.forEach((tank, compIdx) => {
-                let type = tank.type || "G95";
                 let maxCap = tank.max;
                 let currVol = tank.curr;
                 let sales = tank.sales || 0;
@@ -1123,105 +1116,152 @@
                 let usableStock = Math.max(0, currVol - deadStock);
                 let currentStockDays = sales > 0 ? (usableStock / sales) : 99;
 
-                // คำนวณความต้องการขั้นต่ำเพื่อไม่ให้ต่ำกว่า Target Days
                 let minTargetVol = (sales > 0) ? (deadStock + (sales * targetDays)) : (maxCap * 0.8);
                 let minNeedToFill = Math.max(0, Math.round(minTargetVol - currVol));
-                let roomInTank = maxCap - currVol; // พื้นที่ว่างจริงที่ถังรับได้โดยไม่ล้น
+                let roomInTank = maxCap - currVol;
 
-                let tankLoad = 0;
-                let allocatedText = "";
-
-                // หากถังต้องการเติมน้ำมัน
-                if (minNeedToFill > 0) {
-                    let remainingToSatisfy = minNeedToFill;
-
-                    for (let c of fleetCompartments) {
-                        if (!c.isAssigned && remainingToSatisfy > 0 && roomInTank >= c.reducedCapacity) {
-                            let load = 0;
-                            let modeText = "";
-
-                            // กลยุทธ์ที่ 1: ถ้าถังรับได้เต็มช่อง ให้เติมเต็มช่อง (4000L) เพื่อให้เต็มรถที่สุด
-                            if (roomInTank >= c.nominalCapacity) {
-                                load = c.nominalCapacity;
-                                modeText = "โหลดเต็มช่อง (Full)";
-                            }
-                            // กลยุทธ์ที่ 2: ถ้าถังรับได้แค่ขนาดลด 1,000L ให้เติมแบบลด 1,000L (3000L)
-                            else if (roomInTank >= c.reducedCapacity) {
-                                load = c.reducedCapacity;
-                                modeText = "ลด 1,000L (Safe)";
-                            }
-
-                            if (load > 0) {
-                                c.isAssigned = true;
-                                c.assignedLoad = load;
-                                c.assignedTo = `${st.name} (${type})`;
-                                tankLoad += load;
-                                totalDispatched += load;
-                                remainingToSatisfy = Math.max(0, remainingToSatisfy - load);
-                                roomInTank -= load;
-                                usedTruckPlates.add(c.plate);
-
-                                allocatedText += `<span style="display:inline-block; margin-bottom:3px;">🚛 <strong>${c.plate}</strong> [ช่อง ${c.compIdx} ขนาด ${c.nominalCapacity.toLocaleString()}L]: <strong style="color:#0369a1;">${load.toLocaleString()}L</strong> <span style="font-size:11px; color:#64748b;">(${modeText})</span></span><br>`;
-                            }
-                        }
-                    }
-
-                    if (remainingToSatisfy > 0) {
-                        allocatedText += `<span style="color:red; font-size:12px; font-weight:600;">⚠️ ยังขาดอีก ${remainingToSatisfy.toLocaleString()}L (รถไม่พอ ต้องเพิ่มรถในกองยาน)</span>`;
-                    }
-                } else {
-                    allocatedText = `<span style="color:#777;">สต็อกพอสำหรับเกณฑ์ ${targetDays} วันแล้ว</span>`;
-                }
-
-                // คำนวณ Stock Day หลังการจัดส่งจริง
-                let postVol = currVol + tankLoad;
-                let postUsable = Math.max(0, postVol - deadStock);
-                let postStockDays = sales > 0 ? (postUsable / sales) : 99;
-
-                let daysBadgeColor = currentStockDays <= 2 ? "badge-danger" : (currentStockDays <= 4 ? "badge-warning" : "badge-success");
-                let postBadgeColor = postStockDays >= targetDays ? "badge-success" : "badge-warning";
-
-                tableBody += `<tr>
-                    <td><strong>${st.name}</strong> - ถัง ${compIdx+1} (${type})<br>
-                        <span style="font-size:11.5px; color:#777;">ความจุ: ${maxCap.toLocaleString()}L | เหลือจริง: ${currVol.toLocaleString()}L</span>
-                    </td>
-                    <td>
-                        <span class="badge ${daysBadgeColor}">${currentStockDays.toFixed(1)} วัน</span> ➔ 
-                        <span class="badge ${postBadgeColor}"><strong>${postStockDays.toFixed(1)} วัน</strong></span><br>
-                        <span style="font-size:11.5px; color:#64748b;">(ขาย ${sales.toLocaleString()} L/วัน)</span>
-                    </td>
-                    <td>
-                        ความจุ: ${maxCap.toLocaleString()} L<br>
-                        <span style="font-size:11.5px; color:#059669;">(ว่างรับได้: ${(maxCap - currVol).toLocaleString()} L)</span>
-                    </td>
-                    <td><strong style="color:#2e7d32; font-size:15px;">${tankLoad.toLocaleString()}</strong></td>
-                    <td>${allocatedText}</td>
-                </tr>`;
+                tankDemandList.push({
+                    stationName: st.name,
+                    stationId: st.id,
+                    compIdx: compIdx + 1,
+                    type: tank.type || "G95",
+                    maxCap: maxCap,
+                    currVol: currVol,
+                    sales: sales,
+                    deadStock: deadStock,
+                    usableStock: usableStock,
+                    currentStockDays: currentStockDays,
+                    minNeedToFill: minNeedToFill,
+                    roomInTank: roomInTank,
+                    tankLoad: 0,
+                    allocations: []
+                });
             });
         });
 
+        // 🔥 กฎจัดลำดับ: ยอดขายสูงสุดมาก่อน (Priority 1: High Daily Sales -> Priority 2: Low Stock Days)
+        tankDemandList.sort((a, b) => {
+            if (b.sales !== a.sales) {
+                return b.sales - a.sales; // ยอดขายมาก่อน
+            }
+            return a.currentStockDays - b.currentStockDays; // วันเหลือน้อยกว่ามาก่อน
+        });
+
+        // ดำเนินการจัดสรรช่องบรรทุกตามลำดับ Priority
+        let totalDispatched = 0;
+        let usedTruckPlates = new Set();
+
+        tankDemandList.forEach((item) => {
+            if (item.minNeedToFill > 0) {
+                let remainingToSatisfy = item.minNeedToFill;
+
+                for (let c of fleetCompartments) {
+                    if (!c.isAssigned && remainingToSatisfy > 0 && item.roomInTank >= c.reducedCapacity) {
+                        let load = 0;
+                        let modeText = "";
+
+                        // ยึดหลักเต็มพิกัดช่องรถ (Full Payload)
+                        if (item.roomInTank >= c.nominalCapacity) {
+                            load = c.nominalCapacity;
+                            modeText = "เต็มช่อง (Full)";
+                        } else if (item.roomInTank >= c.reducedCapacity) {
+                            load = c.reducedCapacity;
+                            modeText = "ลด 1,000L (Safe)";
+                        }
+
+                        if (load > 0) {
+                            c.isAssigned = true;
+                            c.assignedLoad = load;
+                            c.assignedTo = `${item.stationName} (${item.type})`;
+                            item.tankLoad += load;
+                            totalDispatched += load;
+                            remainingToSatisfy = Math.max(0, remainingToSatisfy - load);
+                            item.roomInTank -= load;
+                            usedTruckPlates.add(c.plate);
+
+                            item.allocations.push(`🚛 <strong>${c.plate}</strong> [ช่อง ${c.compIdx} (${c.nominalCapacity.toLocaleString()}L)]: <strong style="color:#0369a1;">${load.toLocaleString()}L</strong> <span style="font-size:11px; color:#64748b;">(${modeText})</span>`);
+                        }
+                    }
+                }
+
+                if (remainingToSatisfy > 0) {
+                    item.allocations.push(`<span style="color:red; font-size:12px; font-weight:600;">⚠️ ยังขาดอีก ${remainingToSatisfy.toLocaleString()}L (รถไม่พอ)</span>`);
+                }
+            } else {
+                item.allocations.push(`<span style="color:#777;">สต็อกพอสำหรับเกณฑ์ ${targetDays} วันแล้ว</span>`);
+            }
+        });
+
+        // สร้างตารางผลลัพธ์พร้อมแท็ก Priority
+        let tableBody = "";
+        tankDemandList.forEach((item, index) => {
+            let postVol = item.currVol + item.tankLoad;
+            let postUsable = Math.max(0, postVol - item.deadStock);
+            let postStockDays = item.sales > 0 ? (postUsable / item.sales) : 99;
+
+            let daysBadgeColor = item.currentStockDays <= 2 ? "badge-danger" : (item.currentStockDays <= 4 ? "badge-warning" : "badge-success");
+            let postBadgeColor = postStockDays >= targetDays ? "badge-success" : "badge-warning";
+
+            tableBody += `<tr>
+                <td style="text-align:center;">
+                    <span class="badge badge-priority">#${index + 1}</span>
+                </td>
+                <td>
+                    <strong>${item.stationName}</strong> - ถัง ${item.compIdx} (${item.type})<br>
+                    <span style="font-size:11.5px; color:#777;">ความจุ: ${item.maxCap.toLocaleString()}L | เหลือจริง: ${item.currVol.toLocaleString()}L</span>
+                </td>
+                <td>
+                    <strong style="color:#1e293b; font-size:14px;">${item.sales.toLocaleString()}</strong> L/วัน
+                </td>
+                <td>
+                    <span class="badge ${daysBadgeColor}">${item.currentStockDays.toFixed(1)} วัน</span> ➔ 
+                    <span class="badge ${postBadgeColor}"><strong>${postStockDays.toFixed(1)} วัน</strong></span>
+                </td>
+                <td><strong style="color:#2e7d32; font-size:15px;">${item.tankLoad.toLocaleString()}</strong></td>
+                <td>${item.allocations.join('<br>')}</td>
+            </tr>`;
+        });
+
         document.getElementById('res_table_body').innerHTML = tableBody;
-        
+
         let statusEl = document.getElementById('res_status');
         let usedCount = usedTruckPlates.size;
 
         if (totalDispatched === 0) {
             statusEl.innerHTML = `<span class="badge badge-warning">ระดับน้ำมันทุกถังพอสำหรับเกณฑ์ ${targetDays} วันแล้ว ไม่จำเป็นต้องปล่อยรถ</span>`;
         } else {
-            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดส่งเต็มประสิทธิภาพ: โหลดน้ำมันรวม ${totalDispatched.toLocaleString()} ลิตร (ใช้รถ ${usedCount} คัน: ${Array.from(usedTruckPlates).join(', ')})</span>`;
+            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดส่งเต็มประสิทธิภาพตาม Priority ยอดขาย: โหลดน้ำมันรวม ${totalDispatched.toLocaleString()} ลิตร (ใช้รถ ${usedCount} คัน: ${Array.from(usedTruckPlates).join(', ')})</span>`;
         }
         
         document.getElementById('dashboard_result').style.display = 'block';
 
+        // แสดงผลสูตรแบบ LaTeX ในกล่อง Advanced
         let advBox = document.getElementById('advanced_info');
         advBox.innerHTML = `
-            <h4 style="margin-top:0; color: #1e293b;">📐 รายละเอียดแบบจำลอง Full-Payload & Stock Day Optimization</h4>
-            <strong>1. กลยุทธ์การเติมเต็มช่องบรรทุก (Full Load & Slosh Prevention):</strong><br>
-            ระบบจะไม่ทิ้งเศษน้ำมันตกค้าง (เช่น เศษ 2,500L) โดยจะประเมินพื้นที่ว่างสูงสุดของถังปั๊ม (Room in Tank) หากถังสามารถรับได้ ระบบจะปัดขึ้นเป็นการเติมเต็มช่อง (Full Compartment) หรือลด 1,000L ซึ่งส่งผลให้:<br>
-            - รถบรรทุกถูกใช้งานเต็มพิกัด (Max Payload)<br>
-            - ค่า Stock Day ขยับสูงขึ้นกว่าเกณฑ์เป้าหมายขั้นต่ำ ${targetDays} วัน (เพิ่มความปลอดภัยให้ปั๊ม)<br><br>
+            <h4 style="margin-top:0; color: #1e293b;">📐 แบบจำลองคณิตศาสตร์: Sales-Weighted Priority & Full-Payload Optimization (LaTeX)</h4>
+            
+            <strong>1. กฎการจัดลำดับความสำคัญตามยอดขาย (Sales Velocity Priority Rule):</strong><br>
+            ระบบกำหนดฟังก์ชันเป้าหมายและลำดับการจัดสรรช่องรถบรรทุก ($p \in \mathcal{P}$) ตามอัตราการจำหน่ายต่อวัน:<br>
+            $$\\text{Sort tanks by } \\max(Sales_{ik}) \\quad \\text{subject to } \\min(SD_{ik}) \\text{ as tie-breaker}$$
+            เพื่อให้ช่องบรรทุกของรถคันแรกๆ ถูกเติมเต็มให้แก่ผลิตภัณฑ์ที่สร้างการหมุนเวียนสต็อกสูงสุดก่อนเสมอ<br><br>
 
-            <strong>2. สรุปภาพรวม:</strong> จัดส่งจริงรวม = <strong>${totalDispatched.toLocaleString()} L</strong> | ปล่อยรถทั้งสิ้น = <strong>${usedCount} คัน</strong> | ความจุกองยานรวม = <strong>${totalFleetCap.toLocaleString()} L</strong>
+            <strong>2. สมการประเมินระดับสต็อกปลอดภัย (Inventory & Stock Days Formulation):</strong><br>
+            $$DS_{ik} = 0.10 \\times Cap_{ik} \\quad \\text{(Dead Stock 10%)}$$
+            $$US_{ik} = \\max(0,\\, Vol_{ik} - DS_{ik}) \\quad \\text{(Usable Stock)}$$
+            $$SD_{ik} = \\frac{US_{ik}}{Sales_{ik}} \\quad \\text{(Stock Days)}$$
+            $$Need_{ik} = \\max\\left(0,\\, \\min(Cap_{ik},\\, DS_{ik} + Sales_{ik} \\times T_{target}) - Vol_{ik}\\right)$$
+            $$Room_{ik} = Cap_{ik} - Vol_{ik} \\quad \\text{(Ullage / พื้นที่ว่างถัง)}$$<br>
+
+            <strong>3. เงื่อนไขการบรรจุช่องรถเพื่อความปลอดภัย (Slosh-Safe Loading Constraint):</strong><br>
+            แต่ละช่องบรรทุกความจุ \\( V_{vc} \\) อนุญาตให้จ่ายน้ำมันได้เพียง 2 รูปแบบเท่านั้น:<br>
+            $$Load_{vc} \\in \\{0,\\, V_{vc} - 1000,\\, V_{vc}\\}$$
+            โดยมีเงื่อนไขการบรรจุไม่ให้ล้นถังและไม่ให้สต็อกต่ำกว่าเกณฑ์ความปลอดภัย:<br>
+            $$\\sum_{v \\in \\mathcal{V}} \\sum_{c \\in \\mathcal{C}_v} Load_{vc} \\le Room_{ik} \\quad \\forall i, k$$
+            $$\\sum_{v \\in \\mathcal{V}} \\sum_{c \\in \\mathcal{C}_v} Load_{vc} \\ge Need_{ik}$$<br>
+
+            <strong>4. สรุปผลลัพธ์การจัดสรรรอบนี้:</strong><br>
+            - ปริมาณน้ำมันจัดส่งรวม: \\( \\mathbf{${totalDispatched.toLocaleString()} \\text{ L}} \\)<br>
+            - จำนวนรถบรรทุกที่ใช้งาน: \\( \\mathbf{${usedCount} \\text{ คัน}} \\) จากความจุกองยานทั้งหมด \\( \\mathbf{${totalFleetCap.toLocaleString()} \\text{ L}} \\)
         `;
 
         if (window.MathJax) {
