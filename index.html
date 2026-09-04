@@ -39,7 +39,6 @@
         .control-panel { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
         .panel-title { font-size: 15px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #1e293b; display: flex; align-items: center; justify-content: space-between; }
         
-        /* แถบหัวข้อลำดับการจัดส่งพร้อมปุ่มเพิ่มปั๊มในแถวเดียวกัน */
         .delivery-sequence-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .delivery-sequence-label { font-size: 14px; font-weight: 600; color: #334155; margin: 0; }
 
@@ -58,7 +57,6 @@
         .tank-input-row { display: grid; grid-template-columns: 85px 120px 130px 130px 110px; gap: 10px; align-items: center; background: #fcfcfc; border: 1px solid #edf2f7; padding: 8px 12px; border-radius: 6px; margin-top: 8px; font-size: 13px; }
         .tank-type-tag { font-weight: 600; color: #1e293b; background: #e2e8f0; padding: 4px 8px; border-radius: 4px; text-align: center; }
 
-        /* การจัดวางปุ่มบันทึกใต้การ์ดแต่ละปั๊ม */
         .stop-card-footer { display: flex; justify-content: flex-end; margin-top: 14px; padding-top: 10px; border-top: 1px dashed #f1f5f9; }
         .btn-card-save { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 7px 14px; border-radius: 6px; font-family: 'Prompt'; font-size: 12.5px; font-weight: 500; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-card-save:hover { background-color: #bae6fd; color: #0284c7; }
@@ -68,7 +66,6 @@
         .tank-gauge-card { background: #ffffff; border: 1px solid #e9ecef; border-radius: 12px; padding: 15px 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; align-items: center; position: relative; }
         
         .tank-cylinder-container { position: relative; width: 56px; height: 130px; background: #f1f5f9; border: 2px solid #cbd5e1; border-radius: 28px; overflow: hidden; margin: 10px 0; }
-        
         .tank-liquid-base { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; transition: height 0.6s ease; border-radius: 0 0 24px 24px; z-index: 1; }
         .tank-liquid-added { position: absolute; left: 0; right: 0; width: 100%; background-color: var(--pastel-blue); transition: all 0.6s ease; border-top: 1px dashed #0284c7; z-index: 2; }
         
@@ -152,9 +149,9 @@
 
     <!-- MAIN TAB 1: Optimization (หน้าแรก) -->
     <div id="tab-result" class="tab-content active">
-        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Sales-Weighted Priority & Full-Payload)</h3>
+        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Strict Full-Payload Optimization)</h3>
         <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">
-            จัดสรรช่องรถบรรทุกแบบให้ความสำคัญกับ <strong>ผลิตภัณฑ์ที่มียอดขายสูงสุดก่อน (High Sales Velocity Priority)</strong> เพื่อรักษาเสถียรภาพสต็อกอย่างคุ้มค่าที่สุด
+            จัดสรรช่องรถบรรทุกตามยอดขายสูงสุด และ <strong>หากมีการเพิ่มรถเข้ามาจะต้องใส่ให้เต็มคันรถเท่านั้น</strong>
         </p>
         
         <div class="control-panel">
@@ -181,7 +178,6 @@
                 </div>
             </div>
 
-            <!-- แผงสำหรับติ๊กเลือกรถหลายคัน (เช่น เลือกรถ 2 คันพร้อมกัน) -->
             <div id="custom_truck_panel" class="custom-truck-panel">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <strong style="font-size:13.5px; color:#1e293b;">🚛 เลือกรายการรถขนส่งที่ต้องการใช้วิ่งร่วมกัน (Multi-Truck Dispatch):</strong>
@@ -192,17 +188,16 @@
 
             <div class="divider" style="margin: 15px 0;"></div>
             
-            <!-- แถวหัวข้อลำดับการจัดส่ง อยู่แถวเดียวกับปุ่ม + เพิ่มปั๊มปลายทาง -->
+            <!-- แถวหัวข้อจัดลำดับ พร้อมปุ่ม + เพิ่มปั๊มปลายทาง ในแถวเดียวกัน -->
             <div class="delivery-sequence-header">
                 <label class="delivery-sequence-label">📍 ลำดับการจัดส่ง, ระดับน้ำมันคงเหลือ และ ยอดขายเฉลี่ยต่อวัน (L/day)</label>
                 <button type="button" class="btn-mini-add" onclick="addStationDeliveryStop()">+ เพิ่มปั๊มปลายทาง</button>
             </div>
             
-            <!-- รายการปั๊มปลายทาง พร้อมปุ่มบันทึกเฉพาะปั๊มนั้นอยู่ด้านล่างของการ์ด -->
             <div id="station_stops_container"></div>
         </div>
 
-        <!-- ปุ่มประมวลผลแผนจัดส่งหลัก -->
+        <!-- ปุ่มประมวลผลหลักด้านล่าง -->
         <div class="form-group" style="margin-bottom: 25px;">
             <button class="btn btn-generate" onclick="calculateOptimizationAction()">🚀 ประมวลผลแผนจัดส่งเต็มความจุ (Calculate Optimization)</button>
         </div>
@@ -629,6 +624,39 @@
         });
     }
 
+    // =========================================================================
+    // 🚫 ระบบป้องกันการเลือกปั๊มซ้ำกัน (Dynamic Exclusive Station Dropdowns)
+    // =========================================================================
+    function refreshStationDropdownOptions() {
+        let allSelects = document.querySelectorAll('.opt_station_select');
+        let selectedIndexes = [];
+
+        // รวบรวม index ของปั๊มที่ถูกเลือกไว้ในแถวต่างๆ
+        allSelects.forEach(sel => {
+            if (sel.value !== "") {
+                selectedIndexes.push(sel.value);
+            }
+        });
+
+        // อัปเดตตัวเลือกในแต่ละ Dropdown โดยไม่แสดงตัวที่ถูกเลือกไปแล้วในแถวอื่น
+        allSelects.forEach(sel => {
+            let myValue = sel.value;
+            let optionsHTML = `<option value="">-- เลือกปั๊มปลายทาง --</option>`;
+
+            stationData.forEach((row, index) => {
+                if (row.length > 0) {
+                    let isTakenByOther = selectedIndexes.includes(index.toString()) && (index.toString() !== myValue);
+                    if (!isTakenByOther) {
+                        optionsHTML += `<option value="${index}">[${row[0]}] ${row[1]}</option>`;
+                    }
+                }
+            });
+
+            sel.innerHTML = optionsHTML;
+            sel.value = myValue; // คืนค่าเดิมของแถวนี้
+        });
+    }
+
     function updateTruckCap() {
         let compArr = document.getElementById('tr_compartments').value.split('/');
         document.getElementById('tr_capacity').value = compArr.reduce((sum, val) => sum + (parseInt(val) || 0), 0);
@@ -666,7 +694,7 @@
 
     async function removeTruckFromFleetAction(index) {
         if (fleetList.length <= 1) return alert("ต้องมีรถอย่างน้อย 1 คันในกองยาน");
-        let removed = fleetList.splice(index, 1);
+        fleetList.splice(index, 1);
         renderFleetTable();
         updateFleetModeDropdown();
 
@@ -710,6 +738,7 @@
         document.getElementById('fleet_total_cap').innerText = totalFleetCap.toLocaleString();
     }
 
+    // Master Data
     function getTankSpecsJSON() {
         let specs = [];
         document.querySelectorAll('#compartments_area .comp-item').forEach(item => {
@@ -820,11 +849,7 @@
         if (container.children.length === 0) {
             addStationDeliveryStop();
         } else {
-            document.querySelectorAll('.opt_station_select').forEach(sel => {
-                let currentVal = sel.value;
-                updateDropdownElement(sel, stationData, 'เลือกปั๊มปลายทาง');
-                sel.value = currentVal;
-            });
+            refreshStationDropdownOptions();
         }
     }
 
@@ -850,7 +875,6 @@
                 </select>
             </div>
             <div id="${cardId}_tanks_area"></div>
-            <!-- ปุ่มบันทึกเฉพาะปั๊มนี้ อยู่ด้านล่างของการ์ดจุดส่ง -->
             <div class="stop-card-footer">
                 <button type="button" class="btn-card-save" onclick="saveSingleStopLogs('${cardId}')">
                     💾 บันทึกระดับน้ำมัน & ยอดขายของปั๊มนี้
@@ -859,8 +883,8 @@
         `;
         container.appendChild(card);
 
-        let selectEl = card.querySelector('.opt_station_select');
-        updateDropdownElement(selectEl, stationData, 'เลือกปั๊มปลายทาง');
+        // อัปเดตตัวเลือกทันทีโดยคัดกรองตัวที่ถูกเลือกไปแล้วออก
+        refreshStationDropdownOptions();
     }
 
     function removeStationDeliveryStop(cardId) {
@@ -868,6 +892,7 @@
         if (card) {
             card.remove();
             reindexDeliveryStops();
+            refreshStationDropdownOptions(); // คืนตัวเลือกปั๊มกลับสู่ระบบ
         }
     }
 
@@ -882,6 +907,9 @@
         let tanksArea = document.getElementById(`${cardId}_tanks_area`);
         let timeLabel = document.getElementById(`${cardId}_time`);
         tanksArea.innerHTML = "";
+
+        // อัปเดต Dropdown อื่นๆ ทันทีเพื่อนำปั๊มนี้ออกจากตัวเลือกของแถวอื่น
+        refreshStationDropdownOptions();
 
         if (stationIdx === "") {
             timeLabel.innerText = "🕒 ยังไม่มีข้อมูลวัดระดับ";
@@ -1168,7 +1196,6 @@
         section.style.display = "block";
     }
 
-    // 🔘 ฟังก์ชันบันทึกเฉพาะปั๊มของจุดส่งนั้นๆ
     async function saveSingleStopLogs(cardId) {
         if (!SPREADSHEET_ID) return alert('กรุณาลงชื่อเข้าใช้ Google ก่อนครับ');
 
@@ -1217,13 +1244,17 @@
             return alert("⚠️ กรุณาเลือก 'ปั๊มปลายทาง' อย่างน้อย 1 ปั๊มเพื่อจัดส่งครับ");
         }
 
-        calculateSalesPriorityOptimization(selectedStops, dpVal, targetDays);
+        calculateStrictFullCapacityOptimization(selectedStops, dpVal, targetDays);
     }
 
-    function calculateSalesPriorityOptimization(selectedStops, selectedDepotIndex, targetDays) {
+    // =========================================================================
+    // ⚙️ อัลกอริทึม Strict Full-Capacity for Additional Trucks (เพิ่มรถต้องใส่เต็มคันเท่านั้น)
+    // =========================================================================
+    function calculateStrictFullCapacityOptimization(selectedStops, selectedDepotIndex, targetDays) {
         let depot = depotData[selectedDepotIndex];
         let dpLat = parseFloat(depot[2]), dpLng = parseFloat(depot[3]), dpName = depot[1];
 
+        // 1. คำนวณเส้นทางไป-กลับ
         let totalDistance = 0;
         let routeString = `${dpName}`;
         let currentLat = dpLat, currentLng = dpLng;
@@ -1240,11 +1271,12 @@
         document.getElementById('res_route').innerText = routeString;
         document.getElementById('res_distance').innerText = totalDistance.toFixed(2);
 
+        // 2. กรองและจัดเตรียมกองยาน
         let fleetMode = document.getElementById('opt_fleet_mode').value;
-        let activeFleet = [];
+        let availableFleet = [];
         
         if (fleetMode === "auto") {
-            activeFleet = JSON.parse(JSON.stringify(fleetList));
+            availableFleet = JSON.parse(JSON.stringify(fleetList));
         } else if (fleetMode === "custom") {
             let checkedBoxes = document.querySelectorAll('.truck-select-checkbox:checked');
             if (checkedBoxes.length === 0) {
@@ -1252,35 +1284,18 @@
             }
             checkedBoxes.forEach(cb => {
                 let idx = parseInt(cb.value);
-                if (fleetList[idx]) activeFleet.push(JSON.parse(JSON.stringify(fleetList[idx])));
+                if (fleetList[idx]) availableFleet.push(JSON.parse(JSON.stringify(fleetList[idx])));
             });
         } else {
             let specificIndex = parseInt(fleetMode);
             if (!isNaN(specificIndex) && fleetList[specificIndex]) {
-                activeFleet = [ JSON.parse(JSON.stringify(fleetList[specificIndex])) ];
+                availableFleet = [ JSON.parse(JSON.stringify(fleetList[specificIndex])) ];
             } else {
-                activeFleet = JSON.parse(JSON.stringify(fleetList));
+                availableFleet = JSON.parse(JSON.stringify(fleetList));
             }
         }
 
-        let totalFleetCap = activeFleet.reduce((sum, tr) => sum + tr.capacity, 0);
-
-        let fleetCompartments = [];
-        activeFleet.forEach((truck, truckIdx) => {
-            truck.compartments.forEach((cap, cIdx) => {
-                fleetCompartments.push({
-                    plate: truck.plate,
-                    truckIndex: truckIdx + 1,
-                    compIdx: cIdx + 1,
-                    nominalCapacity: cap,
-                    reducedCapacity: Math.max(0, cap - 1000),
-                    isAssigned: false,
-                    assignedLoad: 0,
-                    assignedTo: ""
-                });
-            });
-        });
-
+        // 3. เตรียมรายการความต้องการของแต่ละถัง (เรียงตาม Priority ยอดขาย)
         let tankDemandList = [];
         selectedStops.forEach((st) => {
             st.tanks.forEach((tank, compIdx) => {
@@ -1316,55 +1331,93 @@
             });
         });
 
+        // จัดเรียงตามยอดขายจากมากไปน้อย
         tankDemandList.sort((a, b) => {
             if (b.sales !== a.sales) return b.sales - a.sales;
             return a.currentStockDays - b.currentStockDays;
         });
 
+        // 4. อัลกอริทึมจัดสรรแบบ "รถคันที่เพิ่มมาต้องใส่ให้เต็มคันเท่านั้น"
+        let deployedTrucks = [];
         let totalDispatched = 0;
-        let usedTruckPlates = new Set();
 
-        tankDemandList.forEach((item) => {
-            if (item.minNeedToFill > 0) {
-                let remainingToSatisfy = item.minNeedToFill;
+        // วนลูปพิจารณาทีละคันตามลำดับ
+        for (let tIdx = 0; tIdx < availableFleet.length; tIdx++) {
+            let truck = availableFleet[tIdx];
+            let isAdditionalTruck = (tIdx > 0); // คันที่ 2 เป็นต้นไปถือเป็นรถที่เพิ่มเข้ามา
 
-                for (let c of fleetCompartments) {
-                    if (!c.isAssigned && remainingToSatisfy > 0 && item.roomInTank >= c.reducedCapacity) {
-                        let load = 0;
-                        let modeText = "";
+            // จำลองการจัดสรรลงช่องของรถคันนี้
+            let trialAllocations = [];
+            let truckLoadedTotal = 0;
 
-                        if (item.roomInTank >= c.nominalCapacity) {
-                            load = c.nominalCapacity;
-                            modeText = "เต็มช่อง (Full)";
-                        } else if (item.roomInTank >= c.reducedCapacity) {
-                            load = c.reducedCapacity;
-                            modeText = "ลด 1,000L (Safe)";
-                        }
+            truck.compartments.forEach((cap, cIdx) => {
+                let assigned = false;
 
-                        if (load > 0) {
-                            c.isAssigned = true;
-                            c.assignedLoad = load;
-                            c.assignedTo = `${item.stationName} (${item.type})`;
-                            item.tankLoad += load;
-                            item.tankRef.added = (item.tankRef.added || 0) + load;
-                            totalDispatched += load;
-                            remainingToSatisfy = Math.max(0, remainingToSatisfy - load);
-                            item.roomInTank -= load;
-                            usedTruckPlates.add(c.plate);
-
-                            item.allocations.push(`🚛 <strong>${c.plate}</strong> [ช่อง ${c.compIdx} (${c.nominalCapacity.toLocaleString()}L)]: <strong style="color:#0369a1;">${load.toLocaleString()}L</strong> <span style="font-size:11px; color:#64748b;">(${modeText})</span>`);
-                        }
+                // ค้นหาถังน้ำมันที่เหมาะสมโดยยึดตาม Priority ยอดขาย
+                for (let item of tankDemandList) {
+                    // ถังต้องต้องการน้ำมัน และมีพื้นที่ว่างพอรับน้ำมันเต็มช่อง (cap)
+                    if (item.minNeedToFill > 0 && item.roomInTank >= cap) {
+                        trialAllocations.push({
+                            tankItem: item,
+                            compIdx: cIdx + 1,
+                            nominalCap: cap,
+                            load: cap,
+                            modeText: "เต็มช่อง (Full)"
+                        });
+                        item.roomInTank -= cap;
+                        item.minNeedToFill = Math.max(0, item.minNeedToFill - cap);
+                        truckLoadedTotal += cap;
+                        assigned = true;
+                        break;
                     }
                 }
 
-                if (remainingToSatisfy > 0) {
-                    item.allocations.push(`<span style="color:red; font-size:12px; font-weight:600;">⚠️ ยังขาดอีก ${remainingToSatisfy.toLocaleString()}L (ความจุรถไม่พอ)</span>`);
+                // หากยังใส่ไม่ได้ ลองดูว่าถังไหนรับแบบลด 1,000 ลิตรได้ไหม (เฉพาะรถคันแรกเท่านั้นที่ยอมให้ลดได้)
+                if (!assigned && !isAdditionalTruck) {
+                    let safeReduced = Math.max(0, cap - 1000);
+                    for (let item of tankDemandList) {
+                        if (item.minNeedToFill > 0 && item.roomInTank >= safeReduced) {
+                            trialAllocations.push({
+                                tankItem: item,
+                                compIdx: cIdx + 1,
+                                nominalCap: cap,
+                                load: safeReduced,
+                                modeText: "ลด 1,000L (Safe)"
+                            });
+                            item.roomInTank -= safeReduced;
+                            item.minNeedToFill = Math.max(0, item.minNeedToFill - safeReduced);
+                            truckLoadedTotal += safeReduced;
+                            assigned = true;
+                            break;
+                        }
+                    }
                 }
-            } else {
-                item.allocations.push(`<span style="color:#777;">สต็อกพอสำหรับเกณฑ์ ${targetDays} วันแล้ว</span>`);
-            }
-        });
+            });
 
+            // ⚠️ กฎสำคัญ: หากเป็นรถที่เพิ่มเข้ามา (คันที่ 2 เป็นต้นไป) จะต้องโหลดเต็มพิกัดคันรถเท่านั้น
+            let isFullTruckLoad = (truckLoadedTotal === truck.capacity);
+
+            if (isAdditionalTruck && !isFullTruckLoad) {
+                // คืนค่ากลับ (Rollback) เพราะไม่สามารถโหลดให้เต็มคันรถได้
+                trialAllocations.forEach(alloc => {
+                    alloc.tankItem.roomInTank += alloc.load;
+                    alloc.tankItem.minNeedToFill += alloc.load;
+                });
+                // หยุดการปล่อยรถเพิ่ม
+                break;
+            } else if (truckLoadedTotal > 0) {
+                // อนุมัติการปล่อยรถคันนี้
+                trialAllocations.forEach(alloc => {
+                    alloc.tankItem.tankLoad += alloc.load;
+                    alloc.tankItem.tankRef.added = (alloc.tankItem.tankRef.added || 0) + alloc.load;
+                    alloc.tankItem.allocations.push(`🚛 <strong>${truck.plate}</strong> [ช่อง ${alloc.compIdx} (${alloc.nominalCap.toLocaleString()}L)]: <strong style="color:#0369a1;">${alloc.load.toLocaleString()}L</strong> <span style="font-size:11px; color:#64748b;">(${alloc.modeText})</span>`);
+                });
+                totalDispatched += truckLoadedTotal;
+                deployedTrucks.push(truck);
+            }
+        }
+
+        // 5. สรุปผลลัพธ์ลงตาราง
         let tableBody = "";
         tankDemandList.forEach((item, index) => {
             let postVol = item.currVol + item.tankLoad;
@@ -1373,6 +1426,10 @@
 
             let daysBadgeColor = item.currentStockDays <= 2 ? "badge-danger" : (item.currentStockDays <= 4 ? "badge-warning" : "badge-success");
             let postBadgeColor = postStockDays >= targetDays ? "badge-success" : "badge-warning";
+
+            let allocContent = item.allocations.length > 0 
+                ? item.allocations.join('<br>') 
+                : `<span style="color:#777;">สต็อกพอสำหรับ ${targetDays} วัน หรือ รถเต็มพิกัด</span>`;
 
             tableBody += `<tr>
                 <td style="text-align:center;">
@@ -1390,19 +1447,19 @@
                     <span class="badge ${postBadgeColor}"><strong>${postStockDays.toFixed(1)} วัน</strong></span>
                 </td>
                 <td><strong style="color:#2e7d32; font-size:15px;">${item.tankLoad.toLocaleString()}</strong></td>
-                <td>${item.allocations.join('<br>')}</td>
+                <td>${allocContent}</td>
             </tr>`;
         });
 
         document.getElementById('res_table_body').innerHTML = tableBody;
 
         let statusEl = document.getElementById('res_status');
-        let usedCount = usedTruckPlates.size;
+        let usedCount = deployedTrucks.length;
 
         if (totalDispatched === 0) {
             statusEl.innerHTML = `<span class="badge badge-warning">ระดับน้ำมันทุกถังพอสำหรับเกณฑ์ ${targetDays} วันแล้ว ไม่จำเป็นต้องปล่อยรถ</span>`;
         } else {
-            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดส่งตาม Priority ยอดขาย: โหลดน้ำมันรวม ${totalDispatched.toLocaleString()} ลิตร (ใช้รถ ${usedCount} คัน: ${Array.from(usedTruckPlates).join(', ')})</span>`;
+            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดส่งตามกฎเต็มคันรถ: โหลดรวม ${totalDispatched.toLocaleString()} ลิตร (ปล่อยรถ ${usedCount} คัน: ${deployedTrucks.map(t=>t.plate).join(', ')})</span>`;
         }
         
         document.getElementById('dashboard_result').style.display = 'block';
@@ -1411,32 +1468,26 @@
         let timeStr = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH');
         renderPastelTankGauges(selectedStops, timeStr, true);
 
+        // แสดงผลสูตรแบบ LaTeX ในกล่อง Advanced
         let advBox = document.getElementById('advanced_info');
         advBox.innerHTML = `
-            <h4 style="margin-top:0; color: #1e293b;">📐 แบบจำลองคณิตศาสตร์: Sales-Weighted Priority & Full-Payload Optimization (LaTeX)</h4>
+            <h4 style="margin-top:0; color: #1e293b;">📐 แบบจำลองคณิตศาสตร์: Strict Full-Capacity & Sales Priority (LaTeX)</h4>
             
-            <strong>1. กฎการจัดลำดับความสำคัญตามยอดขาย (Sales Velocity Priority Rule):</strong><br>
-            ระบบกำหนดฟังก์ชันเป้าหมายและลำดับการจัดสรรช่องรถบรรทุก ($p \\in \\mathcal{P}$) ตามอัตราการจำหน่ายต่อวัน:<br>
-            $$\\text{Sort tanks by } \\max(Sales_{ik}) \\quad \\text{subject to } \\min(SD_{ik}) \\text{ as tie-breaker}$$
-            เพื่อให้ช่องบรรทุกของรถคันแรกๆ ถูกเติมเต็มให้แก่ผลิตภัณฑ์ที่สร้างการหมุนเวียนสต็อกสูงสุดก่อนเสมอ<br><br>
+            <strong>1. เงื่อนไขบังคับเต็มคันรถสำหรับรถที่เพิ่มเข้ามา (Full Truckload Constraint for Additional Vehicles):</strong><br>
+            หากมีรถคันที่ $v > 1$ ถูกบรรจุลงในแผนงานขนส่ง ผลรวมของน้ำมันทุกช่องบนรถคันนั้นจะต้องเท่ากับความจุรวมของตัวรถ 100% เต็มเท่านั้น:<br>
+            $$\\sum_{c \\in \\mathcal{C}_v} Load_{vc} = \\sum_{c \\in \\mathcal{C}_v} V_{vc} \\quad \\forall v > 1 \\quad \\text{if } \\sum_{c \\in \\mathcal{C}_v} Load_{vc} > 0$$
+            *(หากไม่สามารถจัดส่งให้เต็มคันรถได้ ระบบจะไม่อนุญาตให้ปล่อยรถคันที่เพิ่มขึ้นมาเพื่อป้องกันความสูญเปล่าด้านต้นทุนเที่ยววิ่ง)*<br><br>
 
-            <strong>2. สมการประเมินระดับสต็อกปลอดภัย (Inventory & Stock Days Formulation):</strong><br>
+            <strong>2. กฎการจัดลำดับความสำคัญตามยอดขาย (Sales Velocity Priority Rule):</strong><br>
+            $$\\text{Sort tanks by } \\max(Sales_{ik}) \\quad \\text{subject to } \\min(SD_{ik}) \\text{ as tie-breaker}$$<br>
+
+            <strong>3. สมการระดับสต็อกปลอดภัย (Inventory Formulation):</strong><br>
             $$DS_{ik} = 0.10 \\times Cap_{ik} \\quad \\text{(Dead Stock 10%)}$$
-            $$US_{ik} = \\max(0,\\, Vol_{ik} - DS_{ik}) \\quad \\text{(Usable Stock)}$$
-            $$SD_{ik} = \\frac{US_{ik}}{Sales_{ik}} \\quad \\text{(Stock Days)}$$
-            $$Need_{ik} = \\max\\left(0,\\, \\min(Cap_{ik},\\, DS_{ik} + Sales_{ik} \\times T_{target}) - Vol_{ik}\\right)$$
-            $$Room_{ik} = Cap_{ik} - Vol_{ik} \\quad \\text{(Ullage / พื้นที่ว่างถัง)}$$<br>
+            $$US_{ik} = \\max(0,\\, Vol_{ik} - DS_{ik})$$
+            $$SD_{ik} = \\frac{US_{ik}}{Sales_{ik}}$$
+            $$Need_{ik} = \\max\\left(0,\\, \\min(Cap_{ik},\\, DS_{ik} + Sales_{ik} \\times T_{target}) - Vol_{ik}\\right)$$<br>
 
-            <strong>3. เงื่อนไขการบรรจุช่องรถเพื่อความปลอดภัย (Slosh-Safe Loading Constraint):</strong><br>
-            แต่ละช่องบรรทุกความจุ \\( V_{vc} \\) อนุญาตให้จ่ายน้ำมันได้เพียง 2 รูปแบบเท่านั้น:<br>
-            $$Load_{vc} \\in \\{0,\\, V_{vc} - 1000,\\, V_{vc}\\}$$
-            โดยมีเงื่อนไขการบรรจุไม่ให้ล้นถังและไม่ให้สต็อกต่ำกว่าเกณฑ์ความปลอดภัย:<br>
-            $$\\sum_{v \\in \\mathcal{V}} \\sum_{c \\in \\mathcal{C}_v} Load_{vc} \\le Room_{ik} \\quad \\forall i, k$$
-            $$\\sum_{v \\in \\mathcal{V}} \\sum_{c \\in \\mathcal{C}_v} Load_{vc} \\ge Need_{ik}$$<br>
-
-            <strong>4. สรุปผลลัพธ์การจัดสรรรอบนี้:</strong><br>
-            - ปริมาณน้ำมันจัดส่งรวม: \\( \\mathbf{${totalDispatched.toLocaleString()} \\text{ L}} \\)<br>
-            - จำนวนรถบรรทุกที่ใช้งานจริง: \\( \\mathbf{${usedCount} \\text{ คัน}} \\) จากกองยานที่ระบุ \\( \\mathbf{${totalFleetCap.toLocaleString()} \\text{ L}} \\)
+            <strong>4. สรุปภาพรวม:</strong> โหลดน้ำมันรวม = <strong>${totalDispatched.toLocaleString()} L</strong> | ปล่อยรถทั้งสิ้น = <strong>${usedCount} คัน</strong>
         `;
 
         if (window.MathJax) {
