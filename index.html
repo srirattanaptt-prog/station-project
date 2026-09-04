@@ -47,7 +47,7 @@
         .tank-input-row { display: grid; grid-template-columns: 85px 120px 130px 130px 110px; gap: 10px; align-items: center; background: #fcfcfc; border: 1px solid #edf2f7; padding: 8px 12px; border-radius: 6px; margin-top: 8px; font-size: 13px; }
         .tank-type-tag { font-weight: 600; color: #1e293b; background: #e2e8f0; padding: 4px 8px; border-radius: 4px; text-align: center; }
 
-        /* 🎨 Minimal Pastel Tank Gauges (กราฟิกหลอดจำลองปริมาณน้ำมัน) */
+        /* Minimal Pastel Tank Gauges */
         .tank-visual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
         .tank-gauge-card { background: #ffffff; border: 1px solid #e9ecef; border-radius: 12px; padding: 15px 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; align-items: center; }
         .tank-cylinder-container { position: relative; width: 50px; height: 120px; background: #f1f5f9; border: 2px solid #cbd5e1; border-radius: 25px; overflow: hidden; margin: 10px 0; display: flex; align-items: flex-end; justify-content: center; }
@@ -135,7 +135,7 @@
     <div id="tab-result" class="tab-content active">
         <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Stock-Days Optimization)</h3>
         <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">
-            กำหนดแผนจัดส่งโดยอิง <strong>Stock Days = (ยอดคงเหลือ - Dead Stock 10%) / ยอดขายเฉลี่ยต่อวัน</strong>
+            เงื่อนไขการโหลดรถ: <strong>โหลดเต็มช่อง หรือ ลดได้ 1,000 ลิตร/ช่องเท่านั้น</strong> (ป้องกัน Sloshing)
         </p>
         
         <div class="control-panel">
@@ -170,7 +170,6 @@
             <div id="station_stops_container"></div>
         </div>
 
-        <!-- แผงปุ่มแยกการทำงานชัดเจน -->
         <div class="grid-2 form-group" style="margin-bottom: 25px;">
             <div>
                 <button class="btn btn-save-logs" onclick="saveTankLogsAction()">💾 บันทึกระดับน้ำมันคงเหลือ & ยอดขาย</button>
@@ -180,7 +179,7 @@
             </div>
         </div>
 
-        <!-- 🎨 กราฟิกจำลองถังน้ำมันมินิมอลพาสเทล (จะแสดงเมื่อกดบันทึกสำเร็จ) -->
+        <!-- กราฟิกจำลองถังน้ำมันมินิมอลพาสเทล -->
         <div id="visual_gauges_section" style="display:none; margin-bottom: 25px; background: #fdfefe; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h4 style="margin:0; font-size:15px; color:#1e293b;">📊 กราฟิกจำลองระดับน้ำมันคงเหลือ & Stock Days ประจำสถานี</h4>
@@ -197,21 +196,21 @@
                 <p style="margin:5px 0;"><strong>สถานะ Constraint:</strong> <span id="res_status"></span></p>
             </div>
             
-            <h4 style="margin: 25px 0 10px 0;">📊 แผนการโหลดและจ่ายน้ำมันตามเกณฑ์ Stock Day</h4>
+            <h4 style="margin: 25px 0 10px 0;">📊 แผนการโหลดและจ่ายน้ำมันตามเกณฑ์ช่องรถ (ลดได้ 1,000L/ช่อง)</h4>
             <table class="result-table">
                 <thead>
                     <tr>
                         <th>ปั๊ม / ชนิดน้ำมัน</th>
                         <th>Stock Day ปัจจุบัน</th>
                         <th>เป้าหมายที่ตั้งไว้</th>
-                        <th>ต้องเติม (ลิตร)</th>
+                        <th>ต้องการเติม (ลิตร)</th>
                         <th>จัดสรรลงรถบรรทุก (Fleet Allocation)</th>
                     </tr>
                 </thead>
                 <tbody id="res_table_body"></tbody>
             </table>
 
-            <button class="btn" style="margin-top: 25px; background-color: #e2e8f0; color: #475569;" onclick="toggleAdvancedInfo()">🔍 Advanced: ดูสูตรการคำนวณ Stock Day อย่างละเอียด</button>
+            <button class="btn" style="margin-top: 25px; background-color: #e2e8f0; color: #475569;" onclick="toggleAdvancedInfo()">🔍 Advanced: ดูสูตรการคำนวณ Stock Day & Compartment Rules</button>
             
             <div id="advanced_info" class="adv-box" style="display:none;"></div>
         </div>
@@ -347,7 +346,7 @@
     // ==========================================
     // 🔴 1. กำหนด CLIENT_ID จาก Google Cloud Console
     // ==========================================
-    const CLIENT_ID = '645134551483-ssafa56gt0jq690n864vknb68ne4isi1.apps.googleusercontent.com'; 
+    const CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com'; 
     let SPREADSHEET_ID = ''; 
 
     const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
@@ -491,9 +490,7 @@
         });
     }
 
-    // ==========================================
-    // 📦 Master Data: สเปกถังน้ำมัน
-    // ==========================================
+    // Master Data
     function getTankSpecsJSON() {
         let specs = [];
         document.querySelectorAll('#compartments_area .comp-item').forEach(item => {
@@ -598,9 +595,7 @@
         document.getElementById('compartments_area').appendChild(div);
     }
 
-    // ==========================================
-    // 🚚 หน้าแรก: Dynamic Stop, Dipstick & Daily Sales
-    // ==========================================
+    // Dynamic Stop & Dipstick
     function initInitialStop() {
         let container = document.getElementById('station_stops_container');
         if (container.children.length === 0) {
@@ -827,9 +822,6 @@
         return selectedStops;
     }
 
-    // =========================================================================
-    // 🎨 ฟังก์ชันสร้างกราฟิก Minimal Pastel Tank Gauges
-    // =========================================================================
     function renderPastelTankGauges(selectedStops, timeStr) {
         let section = document.getElementById('visual_gauges_section');
         let container = document.getElementById('visual_gauges_container');
@@ -852,15 +844,14 @@
                 let usableStock = Math.max(0, tank.curr - deadStock);
                 let stockDays = tank.sales > 0 ? (usableStock / tank.sales) : 0;
 
-                // กำหนดสี Pastel ตามระดับ Stock Day
-                let liquidColor = "#b7e4c7"; // pastel green
+                let liquidColor = "#b7e4c7";
                 let badgeClass = "badge-success";
 
                 if (stockDays <= 2.0) {
-                    liquidColor = "#ffc2d1"; // pastel red/pink
+                    liquidColor = "#ffc2d1";
                     badgeClass = "badge-danger";
                 } else if (stockDays <= 4.0) {
-                    liquidColor = "#fef08a"; // pastel yellow
+                    liquidColor = "#fef08a";
                     badgeClass = "badge-warning";
                 }
 
@@ -889,9 +880,6 @@
         section.style.display = "block";
     }
 
-    // =========================================================================
-    // 🔘 ACTION 1: บันทึกระดับน้ำมันคงเหลือ & ยอดขาย พร้อมเรนเดอร์กราฟิก
-    // =========================================================================
     async function saveTankLogsAction() {
         if (!SPREADSHEET_ID) return alert('กรุณาลงชื่อเข้าใช้ Google ก่อนครับ');
 
@@ -919,7 +907,6 @@
             });
             logRows.forEach(r => tankLogsData.push(r));
 
-            // แสดงผลกราฟิกมินิมอลพาสเทลทันที
             renderPastelTankGauges(selectedStops, timeStr);
             alert(`✅ บันทึกระดับน้ำมันคงเหลือและยอดขายเฉลี่ยสำเร็จ!\nอัปเดตข้อมูลเมื่อ: ${timeStr}`);
         } catch(err) {
@@ -928,9 +915,6 @@
         }
     }
 
-    // =========================================================================
-    // 🔘 ACTION 2: ประมวลผลแผนจัดส่ง (อิง Stock Days กำหนดเอง)
-    // =========================================================================
     function calculateOptimizationAction() {
         let dpVal = document.getElementById('opt_depot_select').value;
         if (dpVal === "") {
@@ -947,10 +931,13 @@
             return alert("⚠️ กรุณาเลือก 'ปั๊มปลายทาง' อย่างน้อย 1 ปั๊มเพื่อจัดส่งครับ");
         }
 
-        calculateStockDayOptimization(selectedStops, dpVal, targetDays);
+        calculateConstrainedStockDayOptimization(selectedStops, dpVal, targetDays);
     }
 
-    function calculateStockDayOptimization(selectedStops, selectedDepotIndex, targetDays) {
+    // =========================================================================
+    // ⚙️ อัลกอริทึมจัดสรรลงช่องรถบรรทุก: โหลดเต็ม หรือ ลดได้ 1,000 ลิตร/ช่องเท่านั้น
+    // =========================================================================
+    function calculateConstrainedStockDayOptimization(selectedStops, selectedDepotIndex, targetDays) {
         let depot = depotData[selectedDepotIndex];
         let dpLat = parseFloat(depot[2]), dpLng = parseFloat(depot[3]), dpName = depot[1];
 
@@ -974,18 +961,23 @@
         let activeFleet = (fleetMode === 'first') ? [fleetList[0]] : JSON.parse(JSON.stringify(fleetList));
         let totalFleetCap = activeFleet.reduce((sum, tr) => sum + tr.capacity, 0);
 
+        // สร้างช่องบรรทุกทั้งหมดในกองยาน (แต่ละช่องยังว่างอยู่ isAssigned = false)
         let fleetCompartments = [];
         activeFleet.forEach((truck, truckIdx) => {
             truck.compartments.forEach((cap, cIdx) => {
                 fleetCompartments.push({
                     plate: truck.plate,
                     compIdx: cIdx + 1,
-                    available: cap
+                    nominalCapacity: cap,
+                    reducedCapacity: Math.max(0, cap - 1000), // ลดได้ 1000 ลิตร
+                    isAssigned: false,
+                    assignedLoad: 0,
+                    assignedTo: ""
                 });
             });
         });
 
-        let tableBody = "", totalNeeded = 0, allTargetsMet = true;
+        let tableBody = "", totalNeeded = 0, totalLoaded = 0, allTargetsMet = true;
 
         selectedStops.forEach((st) => {
             st.tanks.forEach((tank, compIdx) => {
@@ -1010,17 +1002,38 @@
                 let allocatedText = "";
                 let remainingNeed = needToFill;
 
+                // 🚚 การจับคู่ช่องบรรทุกตามเงื่อนไข: เต็มช่อง หรือ ลดได้ 1000L
                 if (needToFill > 0) {
                     for (let c of fleetCompartments) {
-                        if (c.available > 0 && remainingNeed > 0) {
-                            let load = Math.min(c.available, remainingNeed);
-                            allocatedText += `<span style="display:inline-block; margin-bottom:2px;">🚛 <strong>${c.plate}</strong> [ช่อง ${c.compIdx}]: ${load.toLocaleString()}L</span><br>`;
-                            c.available -= load;
-                            remainingNeed -= load;
+                        if (!c.isAssigned && remainingNeed > 0) {
+                            let load = 0;
+                            let modeText = "";
+
+                            // เงื่อนไขที่ 1: ความต้องการเติมเพียงพอให้โหลดเต็มช่อง
+                            if (remainingNeed >= c.nominalCapacity) {
+                                load = c.nominalCapacity;
+                                modeText = "เต็มช่อง";
+                            } 
+                            // เงื่อนไขที่ 2: ความต้องการเติมสามารถโหลดแบบปรับลด 1,000 ลิตรได้
+                            else if (remainingNeed >= c.reducedCapacity) {
+                                load = c.reducedCapacity;
+                                modeText = "ลด 1,000L";
+                            }
+
+                            if (load > 0) {
+                                c.isAssigned = true;
+                                c.assignedLoad = load;
+                                c.assignedTo = `${st.name} (${type})`;
+                                totalLoaded += load;
+                                remainingNeed -= load;
+
+                                allocatedText += `<span style="display:inline-block; margin-bottom:2px;">🚛 <strong>${c.plate}</strong> [ช่อง ${c.compIdx} ขนาด ${c.nominalCapacity.toLocaleString()}L]: <strong>${load.toLocaleString()}L</strong> <span style="font-size:11px; color:#0369a1;">(${modeText})</span></span><br>`;
+                            }
                         }
                     }
+
                     if (remainingNeed > 0) {
-                        allocatedText += `<span style="color:red; font-size:12px; font-weight:600;">* ขาดอีก ${remainingNeed.toLocaleString()}L</span>`;
+                        allocatedText += `<span style="color:red; font-size:12px; font-weight:600;">* ยังขาดอีก ${remainingNeed.toLocaleString()}L (ไม่มีช่องขนาดที่ปลอดภัยรองรับ)</span>`;
                         allTargetsMet = false;
                     }
                 } else {
@@ -1050,26 +1063,23 @@
         if (totalNeeded === 0) {
             statusEl.innerHTML = `<span class="badge badge-warning">ระดับน้ำมันทุกถังพอสำหรับ ${targetDays} วันแล้ว ไม่ต้องจัดรถ</span>`;
         } else if (allTargetsMet) {
-            statusEl.innerHTML = `<span class="badge badge-success">✅ คำนวณแผนสำเร็จ: เติมสต็อกถึงเกณฑ์ ${targetDays} วันครบถ้วน (ใช้กองยาน ${activeFleet.length} คัน)</span>`;
+            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดสรรลงช่องรถสำเร็จตามเงื่อนไขความปลอดภัย (โหลดรวม ${totalLoaded.toLocaleString()} ลิตร)</span>`;
         } else {
-            statusEl.innerHTML = `<span class="badge badge-danger">⚠️ ความจุกองยานไม่พอ! (ต้องการ ${totalNeeded.toLocaleString()}L / กองยานมี ${totalFleetCap.toLocaleString()}L)</span>`;
+            statusEl.innerHTML = `<span class="badge badge-danger">⚠️ ช่องบรรทุกไม่ลงตัวตามเงื่อนไข (ต้องโหลดเต็มช่อง หรือลดได้ 1,000L เท่านั้น)</span>`;
         }
         
         document.getElementById('dashboard_result').style.display = 'block';
 
         let advBox = document.getElementById('advanced_info');
         advBox.innerHTML = `
-            <h4 style="margin-top:0; color: #1e293b;">📐 รายละเอียดแบบจำลองการเติมน้ำมันอิง Stock Day (Petroleum IRP Model)</h4>
-            <strong>1. สูตรคำนวณ Stock Day และ Dead Stock:</strong><br>
-            \\( Dead\\_Stock = Max\\_Capacity \\times 10\\% \\)<br>
-            \\( Usable\\_Stock = \\max(0, Current\\_Vol - Dead\\_Stock) \\)<br>
-            \\( Stock\\_Days = \\frac{Usable\\_Stock}{Daily\\_Sales} \\)<br><br>
+            <h4 style="margin-top:0; color: #1e293b;">📐 กฎและแบบจำลองการจัดสรรช่องบรรทุก (Slosh-Safe Compartment Allocation)</h4>
+            <strong>1. เงื่อนไขทางวิศวกรรมการจ่ายน้ำมัน (Underfill Safety Rule):</strong><br>
+            ช่องบรรทุกความจุ \\( C \\) ลิตร อนุญาตให้บรรจุได้เพียง 2 รูปแบบเท่านั้น:<br>
+            - รูปแบบที่ 1 (Full): \\( Load = C \\) (บรรจุเต็มพิกัด)<br>
+            - รูปแบบที่ 2 (Reduced): \\( Load = C - 1000 \\) (ลดได้ 1,000 ลิตร/ช่อง เพื่อความปลอดภัย)<br>
+            * ปริมาณต่ำกว่า \\( C - 1000 \\) จะไม่อนุญาตให้จ่ายลงช่องเดี่ยวเพื่อป้องกันของเหลวกระแทกขณะขนส่ง<br><br>
 
-            <strong>2. สูตรคำนวณปริมาณที่ต้องเติม (Replenishment Target - ${targetDays} วัน):</strong><br>
-            \\( Target\\_Vol = \\min\\big(Max\\_Capacity, Dead\\_Stock + (Daily\\_Sales \\times ${targetDays})\\big) \\)<br>
-            \\( Need\\_To\\_Fill = \\max(0, Target\\_Vol - Current\\_Vol) \\)<br><br>
-
-            <strong>3. สรุปภาพรวมกองยาน:</strong> ความต้องการน้ำมันรวม = <strong>${totalNeeded.toLocaleString()} L</strong> | ความจุกองยาน = <strong>${totalFleetCap.toLocaleString()} L</strong>
+            <strong>2. สรุปภาพรวมปริมาณ:</strong> ต้องการเติมรวม = <strong>${totalNeeded.toLocaleString()} L</strong> | โหลดลงรถได้จริง = <strong>${totalLoaded.toLocaleString()} L</strong> | ความจุกองยานรวม = <strong>${totalFleetCap.toLocaleString()} L</strong>
         `;
 
         if (window.MathJax) {
