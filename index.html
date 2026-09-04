@@ -47,16 +47,20 @@
         .tank-input-row { display: grid; grid-template-columns: 85px 120px 130px 130px 110px; gap: 10px; align-items: center; background: #fcfcfc; border: 1px solid #edf2f7; padding: 8px 12px; border-radius: 6px; margin-top: 8px; font-size: 13px; }
         .tank-type-tag { font-weight: 600; color: #1e293b; background: #e2e8f0; padding: 4px 8px; border-radius: 4px; text-align: center; }
 
-        /* 🎨 Minimal Pastel Tank Gauges (กราฟิกหลอดสองชั้นจำลองน้ำมันเติมเพิ่ม) */
+        /* 🎨 Minimal Pastel Tank Gauges (ปรับแก้ตำแหน่งต่อยอดอย่างสมบูรณ์) */
         .tank-visual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 15px; margin-top: 15px; }
         .tank-gauge-card { background: #ffffff; border: 1px solid #e9ecef; border-radius: 12px; padding: 15px 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; align-items: center; position: relative; }
-        .tank-cylinder-container { position: relative; width: 56px; height: 130px; background: #f1f5f9; border: 2px solid #cbd5e1; border-radius: 28px; overflow: hidden; margin: 10px 0; display: flex; flex-direction: column-reverse; align-items: center; }
         
-        .tank-liquid-base { width: 100%; transition: height 0.6s ease; border-radius: 0 0 24px 24px; }
-        .tank-liquid-added { width: 100%; background-color: var(--pastel-blue); transition: height 0.6s ease; border-top: 1px dashed #0284c7; }
+        .tank-cylinder-container { position: relative; width: 56px; height: 130px; background: #f1f5f9; border: 2px solid #cbd5e1; border-radius: 28px; overflow: hidden; margin: 10px 0; }
         
-        .tank-deadstock-line { position: absolute; bottom: 10%; left: 0; right: 0; height: 1px; border-top: 1px dashed #ef4444; z-index: 2; pointer-events: none; }
-        .tank-deadstock-tag { position: absolute; bottom: 11%; right: 4px; font-size: 8px; color: #ef4444; font-weight: bold; }
+        /* น้ำมันเดิม ยึดฐานล่างสุด */
+        .tank-liquid-base { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; transition: height 0.6s ease; border-radius: 0 0 24px 24px; z-index: 1; }
+        
+        /* น้ำมันเติมเพิ่ม ยึดต่อจากระดับเดิมขึ้นไปด้านบน */
+        .tank-liquid-added { position: absolute; left: 0; right: 0; width: 100%; background-color: var(--pastel-blue); transition: all 0.6s ease; border-top: 1px dashed #0284c7; z-index: 2; }
+        
+        .tank-deadstock-line { position: absolute; bottom: 10%; left: 0; right: 0; height: 1px; border-top: 1px dashed #ef4444; z-index: 3; pointer-events: none; }
+        .tank-deadstock-tag { position: absolute; bottom: 11%; right: 4px; font-size: 8px; color: #ef4444; font-weight: bold; z-index: 3; }
         .tank-gauge-type { font-weight: 600; font-size: 13px; color: #1e293b; }
         .tank-gauge-details { font-size: 11.5px; color: #475569; margin-top: 4px; line-height: 1.5; text-align: center; }
         .tank-gauge-days { font-size: 12px; font-weight: 600; margin-top: 6px; padding: 3px 8px; border-radius: 12px; display: inline-block; }
@@ -183,7 +187,7 @@
             </div>
         </div>
 
-        <!-- 🎨 กราฟิกจำลองถังน้ำมันมินิมอลพาสเทล (แสดงทั้งระดับคงเหลือเดิม และ ปริมาณที่จะเติมเพิ่มสีฟ้า) -->
+        <!-- กราฟิกจำลองถังน้ำมันมินิมอลพาสเทล -->
         <div id="visual_gauges_section" style="display:none; margin-bottom: 25px; background: #fdfefe; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h4 style="margin:0; font-size:15px; color:#1e293b;" id="gauges_title">📊 กราฟิกจำลองระดับน้ำมันคงเหลือ & Stock Days ประจำสถานี</h4>
@@ -493,7 +497,7 @@
 
     async function fetchDataFromSheets() {
         try {
-            // ดึง Tank_Logs ก่อนเสมอเพื่อให้พร้อมใช้งานตอนเลือกปั๊ม
+            // ดึง Tank_Logs ให้เสร็จก่อนเสมอ
             try {
                 let resLogs = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Tank_Logs!A2:E' });
                 tankLogsData = resLogs.result.values || [];
@@ -781,7 +785,7 @@
         });
     }
 
-    // ดึงประวัติที่ถูก Save ล่าสุดมาแสดงผลอัตโนมัติ
+    // ดึงค่าล่าสุดที่ถูกเซฟไว้ใน Tank_Logs มาหยอดลงฟอร์ม
     function onStationStopSelected(cardId, stationIdx) {
         let tanksArea = document.getElementById(`${cardId}_tanks_area`);
         let timeLabel = document.getElementById(`${cardId}_time`);
@@ -800,7 +804,7 @@
         }
         if (specs.length === 0) specs = [{ type: 'G95', max: 10000 }];
 
-        // ค้นหา Log ล่าสุดของปั๊มนี้จากฐานข้อมูลแบบ Reverse loop
+        // ค้นหา Log ล่าสุดของปั๊มนี้จากฐานข้อมูลแบบย้อนหลังจากล่างขึ้นบน
         let lastLog = null;
         for (let i = tankLogsData.length - 1; i >= 0; i--) {
             let logStId = (tankLogsData[i][1] || "").toString().trim();
@@ -830,7 +834,6 @@
         tanksArea.appendChild(headerRow);
 
         specs.forEach((sp, idx) => {
-            // ดึงค่าคงเหลือและยอดขายล่าสุดที่เคยเซฟไว้
             let prevCurr = (prevValues[idx] && prevValues[idx].curr !== undefined) ? prevValues[idx].curr : 0;
             let prevSales = (prevValues[idx] && prevValues[idx].sales !== undefined) ? prevValues[idx].sales : 1500;
             let deadStock = Math.round(sp.max * 0.10);
@@ -954,7 +957,7 @@
         return selectedStops;
     }
 
-    // 🎨 ฟังก์ชันสร้างกราฟิกสองระดับ (คงเหลือเดิม + เติมเพิ่มสีฟ้าพาสเทล)
+    // 🎨 กราฟิกหลอดแก้วสองชั้น: น้ำมันสีฟ้าพาสเทลต่อยอดขึ้นจากระดับเดิมอย่างถูกต้อง
     function renderPastelTankGauges(selectedStops, timeStr, isAfterOptimization = false) {
         let section = document.getElementById('visual_gauges_section');
         let container = document.getElementById('visual_gauges_container');
@@ -996,7 +999,6 @@
                 let postUsable = Math.max(0, totalAfter - deadStock);
                 let postStockDays = sales > 0 ? (postUsable / sales) : 0;
 
-                // กำหนดสีเดิมตาม Stock Day
                 let liquidBaseColor = "#b7e4c7";
                 let badgeClass = "badge-success";
 
@@ -1013,7 +1015,6 @@
                 let card = document.createElement('div');
                 card.className = "tank-gauge-card";
 
-                // ข้อความบรรยายใต้หลอดตามรูปแบบที่ผู้ใช้กำหนด
                 let detailsHTML = "";
                 let daysBadgeHTML = "";
 
@@ -1052,10 +1053,10 @@
                     <div class="tank-cylinder-container">
                         <div class="tank-deadstock-line"></div>
                         <div class="tank-deadstock-tag">10%</div>
-                        <!-- ชั้นบน: น้ำมันที่เติมเพิ่ม (สีฟ้าพาสเทล) -->
-                        <div class="tank-liquid-added" style="height: ${addedPercent}%;"></div>
-                        <!-- ชั้นล่าง: น้ำมันคงเหลือเดิม -->
+                        <!-- น้ำมันเดิม ยึดฐานล่างสุด -->
                         <div class="tank-liquid-base" style="height: ${basePercent}%; background-color: ${liquidBaseColor};"></div>
+                        <!-- น้ำมันเติมเพิ่ม ยึดต่อจากระดับเดิมขึ้นไปด้านบน -->
+                        <div class="tank-liquid-added" style="bottom: ${basePercent}%; height: ${addedPercent}%;"></div>
                     </div>
                     <div class="tank-gauge-details">${detailsHTML}</div>
                     ${daysBadgeHTML}
@@ -1127,12 +1128,11 @@
         calculateSalesPriorityOptimization(selectedStops, dpVal, targetDays);
     }
 
-    // Action 2: อัลกอริทึมจัดสรรตามลำดับความสำคัญยอดขายสูงสุดก่อน (Sales Priority Dispatch)
+    // Action 2: อัลกอริทึมจัดสรรตามลำดับความสำคัญยอดขายสูงสุดก่อน
     function calculateSalesPriorityOptimization(selectedStops, selectedDepotIndex, targetDays) {
         let depot = depotData[selectedDepotIndex];
         let dpLat = parseFloat(depot[2]), dpLng = parseFloat(depot[3]), dpName = depot[1];
 
-        // 1. คำนวณเส้นทาง
         let totalDistance = 0;
         let routeString = `${dpName}`;
         let currentLat = dpLat, currentLng = dpLng;
@@ -1149,7 +1149,6 @@
         document.getElementById('res_route').innerText = routeString;
         document.getElementById('res_distance').innerText = totalDistance.toFixed(2);
 
-        // 2. กองยาน
         let fleetMode = document.getElementById('opt_fleet_mode').value;
         let activeFleet = (fleetMode === 'first') ? [fleetList[0]] : JSON.parse(JSON.stringify(fleetList));
         let totalFleetCap = activeFleet.reduce((sum, tr) => sum + tr.capacity, 0);
@@ -1170,7 +1169,6 @@
             });
         });
 
-        // 3. จัดเรียง Priority ตามยอดขายสูงสุดก่อน
         let tankDemandList = [];
         selectedStops.forEach((st) => {
             st.tanks.forEach((tank, compIdx) => {
@@ -1206,7 +1204,7 @@
             });
         });
 
-        // จัดเรียงตามยอดขายจากมากไปน้อย (Priority 1: Max Daily Sales -> Priority 2: Min Stock Days)
+        // จัดเรียงตามยอดขายจากมากไปน้อย
         tankDemandList.sort((a, b) => {
             if (b.sales !== a.sales) return b.sales - a.sales;
             return a.currentStockDays - b.currentStockDays;
@@ -1237,7 +1235,7 @@
                             c.assignedLoad = load;
                             c.assignedTo = `${item.stationName} (${item.type})`;
                             item.tankLoad += load;
-                            item.tankRef.added = (item.tankRef.added || 0) + load; // อัปเดตยอดเพิ่มเพื่อนำไปแสดงบนกราฟิก
+                            item.tankRef.added = (item.tankRef.added || 0) + load;
                             totalDispatched += load;
                             remainingToSatisfy = Math.max(0, remainingToSatisfy - load);
                             item.roomInTank -= load;
@@ -1256,7 +1254,6 @@
             }
         });
 
-        // 4. สร้างตารางผลลัพธ์
         let tableBody = "";
         tankDemandList.forEach((item, index) => {
             let postVol = item.currVol + item.tankLoad;
@@ -1299,7 +1296,7 @@
         
         document.getElementById('dashboard_result').style.display = 'block';
 
-        // 🎨 แสดงกราฟิกหลอดสองระดับ (สีคงเหลือเดิม + สีฟ้าพาสเทลที่เติมเพิ่ม)
+        // 🎨 แสดงกราฟิกหลอดสองชั้น (น้ำมันสีฟ้าพาสเทลต่อยอดจากระดับเดิมขึ้นด้านบน)
         let now = new Date();
         let timeStr = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH');
         renderPastelTankGauges(selectedStops, timeStr, true);
