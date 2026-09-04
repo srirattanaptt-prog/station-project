@@ -12,9 +12,10 @@
             --bg-color: #f4f7f6; --card-bg: #ffffff; --text-main: #4a4a4a; --text-light: #7a7a7a;
             --pastel-blue: #a2d2ff; --pastel-blue-hover: #bde0fe; --pastel-green: #b7e4c7; 
             --pastel-green-hover: #95d5b2; --pastel-pink: #ffc2d1; --border-color: #e2e8f0;
+            --pastel-yellow: #fef08a; --pastel-red: #fecaca;
         }
         body { font-family: 'Prompt', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 40px 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 900px; background: var(--card-bg); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; }
+        .container { width: 100%; max-width: 950px; background: var(--card-bg); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; }
         .header { text-align: center; padding: 30px 20px; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); border-bottom: 1px solid var(--border-color); }
         .header h1 { margin: 0; font-size: 24px; font-weight: 600; color: #333; }
         .header p { margin: 10px 0 0; font-size: 14px; color: var(--text-light); }
@@ -23,15 +24,54 @@
         .btn-google { background: #fff; border: 1px solid #ccc; padding: 8px 16px; border-radius: 24px; font-family: 'Prompt'; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: 0.2s; color: #3c4043; }
         .btn-google:hover { background: #f8f9fa; box-shadow: 0 4px 6px rgba(0,0,0,0.08); }
         
+        /* Navigation Tabs */
         .tabs { display: flex; background-color: #fafafa; border-bottom: 1px solid var(--border-color); }
-        .tab-btn { flex: 1; padding: 15px 10px; border: none; background: none; font-family: 'Prompt'; font-size: 15px; font-weight: 500; color: var(--text-light); cursor: pointer; transition: all 0.3s ease; }
+        .tab-btn { flex: 1; padding: 16px 10px; border: none; background: none; font-family: 'Prompt'; font-size: 15px; font-weight: 500; color: var(--text-light); cursor: pointer; transition: all 0.3s ease; }
         .tab-btn.active { color: #2c3e50; background-color: var(--card-bg); border-bottom: 3px solid var(--pastel-blue); }
-        .tab-btn.generate-btn { background-color: #e8f5e9; color: #2e7d32; }
-        .tab-btn.generate-btn.active { border-bottom: 3px solid var(--pastel-green); }
+        .tab-btn.generate-btn { background-color: #f8fcf9; color: #2e7d32; }
+        .tab-btn.generate-btn.active { background-color: var(--card-bg); border-bottom: 3px solid var(--pastel-green); }
         
         .tab-content { display: none; padding: 30px; }
         .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Control Panel */
+        .control-panel { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
+        .panel-title { font-size: 15px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #1e293b; display: flex; align-items: center; justify-content: space-between; }
+        
+        .station-stop-card { background: #ffffff; border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .station-stop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .station-stop-badge { font-size: 12px; font-weight: 600; color: #475569; background: #e2e8f0; padding: 4px 10px; border-radius: 6px; }
+        .station-last-updated { font-size: 12px; color: #0284c7; font-weight: 500; }
+        
+        .tank-input-row { display: grid; grid-template-columns: 85px 120px 130px 130px 110px; gap: 10px; align-items: center; background: #fcfcfc; border: 1px solid #edf2f7; padding: 8px 12px; border-radius: 6px; margin-top: 8px; font-size: 13px; }
+        .tank-type-tag { font-weight: 600; color: #1e293b; background: #e2e8f0; padding: 4px 8px; border-radius: 4px; text-align: center; }
+
+        /* 🎨 Minimal Pastel Tank Gauges (กราฟิกหลอดจำลองปริมาณน้ำมัน) */
+        .tank-visual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
+        .tank-gauge-card { background: #ffffff; border: 1px solid #e9ecef; border-radius: 12px; padding: 15px 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; align-items: center; }
+        .tank-cylinder-container { position: relative; width: 50px; height: 120px; background: #f1f5f9; border: 2px solid #cbd5e1; border-radius: 25px; overflow: hidden; margin: 10px 0; display: flex; align-items: flex-end; justify-content: center; }
+        .tank-liquid { width: 100%; transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 0 0 20px 20px; }
+        .tank-deadstock-line { position: absolute; bottom: 10%; left: 0; right: 0; height: 1px; border-top: 1px dashed #ef4444; z-index: 2; }
+        .tank-deadstock-tag { position: absolute; bottom: 11%; right: 4px; font-size: 8px; color: #ef4444; font-weight: bold; }
+        .tank-gauge-type { font-weight: 600; font-size: 13px; color: #1e293b; }
+        .tank-gauge-vol { font-size: 11.5px; color: #64748b; margin-top: 2px; }
+        .tank-gauge-days { font-size: 12px; font-weight: 600; margin-top: 6px; padding: 3px 8px; border-radius: 12px; display: inline-block; }
+
+        .btn-remove-stop { background: #fee2e2; color: #b91c1c; border: none; border-radius: 6px; width: 34px; height: 34px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-remove-stop:hover { background: #fca5a5; }
+        .btn-mini-add { background: #e0f2fe; color: #0369a1; border: 1px dashed #7dd3fc; padding: 6px 12px; border-radius: 20px; font-family: 'Prompt'; font-size: 12px; font-weight: 500; cursor: pointer; transition: 0.2s; }
+        .btn-mini-add:hover { background: #bae6fd; }
+
+        /* Sub Tabs */
+        .sub-tabs-wrapper { display: flex; justify-content: center; margin-bottom: 25px; }
+        .sub-tabs { display: inline-flex; background: #eef2f5; padding: 4px; border-radius: 30px; gap: 4px; border: 1px solid var(--border-color); width: 100%; max-width: 550px; }
+        .sub-tab-btn { flex: 1; padding: 9px 15px; border: none; background: transparent; font-family: 'Prompt'; font-size: 13.5px; font-weight: 500; color: #64748b; border-radius: 25px; cursor: pointer; transition: all 0.25s ease; text-align: center; }
+        .sub-tab-btn:hover { color: #1e293b; }
+        .sub-tab-btn.active { background: #ffffff; color: #1e293b; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+        
+        .sub-tab-content { display: none; }
+        .sub-tab-content.active { display: block; animation: fadeIn 0.3s ease; }
         
         .form-group { margin-bottom: 20px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -44,6 +84,8 @@
         .btn:active { transform: scale(0.98); }
         .btn-add { background-color: var(--pastel-pink); color: #333; margin-bottom: 20px; }
         .btn-submit { background-color: var(--pastel-blue); color: #333; }
+        .btn-save-logs { background-color: #bae6fd; color: #0369a1; font-weight: 600; border: 1px solid #7dd3fc; }
+        .btn-save-logs:hover { background-color: #7dd3fc; color: #075985; }
         .btn-generate { background-color: var(--pastel-green); color: #1a4a28; font-size: 16px; font-weight: 600; }
         .divider { height: 1px; background-color: var(--border-color); margin: 25px 0; }
         .select-db { background: #eef2f3; border-color: #cdd6db; font-weight: 600; color: #2c3e50; }
@@ -58,12 +100,10 @@
         .badge-danger { background: #f8d7da; color: #721c24; }
         
         .adv-box { margin-top: 15px; padding: 20px; background: #f8f9fa; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 13px; line-height: 1.6; color: #475569; }
-        .adv-box code { background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #b91c1c; font-family: monospace; }
     </style>
 	
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
 </head>
 <body>
 
@@ -85,146 +125,215 @@
         </div>
     </div>
 
-    <!-- Navigation Tabs -->
+    <!-- Main Navigation Tabs -->
     <div class="tabs">
-        <button class="tab-btn active" onclick="openTab(event, 'tab-station')">1. ปั๊มน้ำมัน</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-depot')">2. คลังน้ำมัน</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-truck')">3. รถขนส่ง</button>
-        <button class="tab-btn generate-btn" onclick="openTab(event, 'tab-result')">🚀 ผลลัพธ์</button>
+        <button class="tab-btn generate-btn active" onclick="openMainTab(event, 'tab-result')">🚀 คำนวณแผนจัดส่ง (Optimization)</button>
+        <button class="tab-btn" onclick="openMainTab(event, 'tab-master')">📋 จัดการฐานข้อมูล (Master Data)</button>
     </div>
 
-    <!-- TAB 1: ปั๊มน้ำมัน -->
-    <div id="tab-station" class="tab-content active">
-        <h3 style="margin-top:0;">ข้อมูลสถานีปลายทาง (Station)</h3>
+    <!-- MAIN TAB 1: Optimization (หน้าแรก) -->
+    <div id="tab-result" class="tab-content active">
+        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Stock-Days Optimization)</h3>
+        <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">
+            กำหนดแผนจัดส่งโดยอิง <strong>Stock Days = (ยอดคงเหลือ - Dead Stock 10%) / ยอดขายเฉลี่ยต่อวัน</strong>
+        </p>
         
-        <div class="form-group">
-            <label>📂 โหลดข้อมูลจาก Google Sheets ของคุณ</label>
-            <select id="db_station_list" class="select-db" onchange="loadStationData()">
-                <option value="">-- กรุณาลงชื่อเข้าใช้เพื่อดึงข้อมูล --</option>
-            </select>
-        </div>
+        <div class="control-panel">
+            <div class="panel-title">
+                <span>🎯 กำหนดเงื่อนไขการจัดส่ง (Dispatch Parameters)</span>
+                <button type="button" class="btn-mini-add" onclick="addStationDeliveryStop()">+ เพิ่มปั๊มปลายทาง</button>
+            </div>
 
-        <div class="grid-2 form-group">
-            <div><label>รหัสปั๊ม</label><input type="text" id="st_id" placeholder="เช่น ST-001"></div>
-            <div><label>ชื่อปั๊มน้ำมัน</label><input type="text" id="st_name" placeholder="เช่น ปั๊มสาขา A"></div>
-        </div>
-
-        <label>ปักหมุดที่ตั้งบนแผนที่</label>
-        <div id="map_station" class="map-container"></div>
-        <div class="grid-2 form-group">
-            <div><label>ละติจูด (Lat)</label><input type="text" id="st_lat" value="13.800000" readonly style="background:#eee;"></div>
-            <div><label>ลองจิจูด (Lng)</label><input type="text" id="st_lng" value="100.550000" readonly style="background:#eee;"></div>
-        </div>
-        
-        <button class="btn btn-submit" style="margin-bottom:20px;" onclick="saveStation()">💾 บันทึกปั๊มนี้ลง Google Sheets</button>
-        <div class="divider"></div>
-
-        <h4 style="margin-top:0; color:#333;">📦 ข้อมูลถังน้ำมันที่ปั๊ม (จำลองสำหรับการคำนวณ)</h4>
-        <div id="compartments_area">
-            <div class="comp-item" style="background:#fcfcfc; padding:15px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:10px;">
-                <div style="font-weight:500; margin-bottom:10px;">ถังที่ 1</div>
-                <div class="grid-3 form-group" style="margin-bottom:0;">
-                    <div><label>ประเภท</label><input type="text" class="c_type" value="G95"></div>
-                    <div><label>ความจุสูงสุด</label><input type="number" class="c_max" value="10000"></div>
-                    <div><label>ปัจจุบันเหลือ</label><input type="number" class="c_curr" value="2000"></div>
+            <div class="grid-3 form-group">
+                <div>
+                    <label>🏭 คลังน้ำมันต้นทาง</label>
+                    <select id="opt_depot_select" class="select-db" onchange="syncFromOptSelection('depot')">
+                        <option value="">-- เลือกคลังต้นทาง --</option>
+                    </select>
+                </div>
+                <div>
+                    <label>🚛 รูปแบบการใช้รถขนส่ง</label>
+                    <select id="opt_fleet_mode" class="select-db">
+                        <option value="all">🚚 จัดส่งด้วยกองยานทั้งหมด (Multi-Truck Auto-Alloc)</option>
+                        <option value="first">🚛 ใช้เฉพาะคันแรก (Single Truck Priority)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>🎯 เป้าหมายสต็อกปลอดภัย (Target Days: วัน)</label>
+                    <input type="number" id="st_target_days" value="5.0" step="0.5" min="1" max="30" style="background:#fff; font-weight:600; color:#0369a1;" placeholder="กำหนดจำนวนวันเองได้">
                 </div>
             </div>
-        </div>
-        <button class="btn btn-add" onclick="addCompartment()">+ เพิ่มถังน้ำมัน</button>
 
-        <div class="divider"></div>
-        <h4 style="margin-top:0; color:#333;">🎯 เงื่อนไขการเติม (Constraints)</h4>
-        <div class="form-group">
-            <label>เป้าหมายระดับน้ำมันหลังจัดส่ง (% ของความจุถัง)</label>
-            <select id="st_target_percent">
-                <option value="25">25% (เติมเลี้ยงระดับ)</option>
-                <option value="50">50% (ครึ่งถัง)</option>
-                <option value="75" selected>75% (ค่อนข้างเต็ม)</option>
-                <option value="100">100% (เติมเต็มถัง)</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- TAB 2: คลังน้ำมัน -->
-    <div id="tab-depot" class="tab-content">
-        <h3 style="margin-top:0;">ข้อมูลคลังต้นทาง (Depot)</h3>
-        
-        <div class="form-group">
-            <label>📂 โหลดข้อมูลจาก Google Sheets ของคุณ</label>
-            <select id="db_depot_list" class="select-db" onchange="loadDepotData()">
-                <option value="">-- กรุณาลงชื่อเข้าใช้เพื่อดึงข้อมูล --</option>
-            </select>
+            <div class="divider" style="margin: 15px 0;"></div>
+            <label style="margin-bottom: 10px;">📍 ลำดับการจัดส่ง, ระดับน้ำมันคงเหลือ และ ยอดขายเฉลี่ยต่อวัน (L/day)</label>
+            
+            <div id="station_stops_container"></div>
         </div>
 
-        <div class="grid-2 form-group">
-            <div><label>รหัสคลัง</label><input type="text" id="dp_id" placeholder="เช่น DP-001"></div>
-            <div><label>ชื่อคลังน้ำมัน</label><input type="text" id="dp_name" placeholder="เช่น คลังหลัก"></div>
+        <!-- แผงปุ่มแยกการทำงานชัดเจน -->
+        <div class="grid-2 form-group" style="margin-bottom: 25px;">
+            <div>
+                <button class="btn btn-save-logs" onclick="saveTankLogsAction()">💾 บันทึกระดับน้ำมันคงเหลือ & ยอดขาย</button>
+            </div>
+            <div>
+                <button class="btn btn-generate" onclick="calculateOptimizationAction()">🚀 ประมวลผลแผนจัดส่ง</button>
+            </div>
         </div>
 
-        <label>ปักหมุดที่ตั้งคลังน้ำมัน</label>
-        <div id="map_depot" class="map-container"></div>
-        <div class="grid-2 form-group">
-            <div><label>ละติจูด (Lat)</label><input type="text" id="dp_lat" value="13.700000" readonly style="background:#eee;"></div>
-            <div><label>ลองจิจูด (Lng)</label><input type="text" id="dp_lng" value="100.450000" readonly style="background:#eee;"></div>
+        <!-- 🎨 กราฟิกจำลองถังน้ำมันมินิมอลพาสเทล (จะแสดงเมื่อกดบันทึกสำเร็จ) -->
+        <div id="visual_gauges_section" style="display:none; margin-bottom: 25px; background: #fdfefe; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h4 style="margin:0; font-size:15px; color:#1e293b;">📊 กราฟิกจำลองระดับน้ำมันคงเหลือ & Stock Days ประจำสถานี</h4>
+                <span id="gauges_time_stamp" style="font-size:12px; color:#64748b;"></span>
+            </div>
+            <div id="visual_gauges_container"></div>
         </div>
-        
-        <button class="btn btn-submit" onclick="saveDepot()">💾 บันทึกคลังนี้ลง Google Sheets</button>
-    </div>
-
-    <!-- TAB 3: รถขนส่ง -->
-    <div id="tab-truck" class="tab-content">
-        <h3 style="margin-top:0;">ข้อมูลรถขนส่ง (Truck)</h3>
-        <div class="form-group"><label>ทะเบียนรถ</label><input type="text" id="tr_plate" value="1กข-1234"></div>
-        <div class="form-group"><label>ความจุรวมทั้งหมด (ลิตร)</label><input type="number" id="tr_capacity" value="16000" readonly style="background:#eee;"></div>
-        <div class="form-group"><label>ขนาดช่องน้ำมัน (แบ่งด้วย /)</label><input type="text" id="tr_compartments" value="4000/4000/4000/4000" onchange="updateTruckCap()"></div>
-    </div>
-
-    <!-- TAB 4: ผลลัพธ์ Optimization -->
-    <div id="tab-result" class="tab-content">
-        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Optimization)</h3>
-        <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">ประมวลผลการจัดสรรน้ำมันเข้าช่องรถบรรทุกตามเงื่อนไขเป้าหมาย %</p>
-        <button class="btn btn-generate" onclick="calculateOptimization()">⚙️ ประมวลผลแผนจัดส่ง</button>
         
         <div id="dashboard_result" style="display:none;">
             <div class="dashboard-card">
-                <h4 style="margin:0 0 10px 0;">📍 ข้อมูลเส้นทาง (Routing)</h4>
+                <h4 style="margin:0 0 10px 0;">📍 ข้อมูลเส้นทางจัดส่งรวม (Fleet Routing)</h4>
                 <p style="margin:5px 0;"><strong>เส้นทาง:</strong> <span id="res_route"></span></p>
-                <p style="margin:5px 0;"><strong>ระยะทางไป-กลับ:</strong> <span id="res_distance" style="color:#2e7d32; font-weight:bold;"></span> กิโลเมตร</p>
+                <p style="margin:5px 0;"><strong>ระยะทางรวมทั้งสิ้น (ไป-กลับ):</strong> <span id="res_distance" style="color:#2e7d32; font-weight:bold;"></span> กิโลเมตร</p>
                 <p style="margin:5px 0;"><strong>สถานะ Constraint:</strong> <span id="res_status"></span></p>
             </div>
             
-            <h4 style="margin: 25px 0 10px 0;">📊 แผนการโหลดและจ่ายน้ำมัน</h4>
+            <h4 style="margin: 25px 0 10px 0;">📊 แผนการโหลดและจ่ายน้ำมันตามเกณฑ์ Stock Day</h4>
             <table class="result-table">
-                <thead><tr><th>ถังปั๊มปลายทาง</th><th>เป้าหมายที่ตั้งไว้</th><th>ต้องเติม (ลิตร)</th><th>จัดสรรลงรถบรรทุก</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>ปั๊ม / ชนิดน้ำมัน</th>
+                        <th>Stock Day ปัจจุบัน</th>
+                        <th>เป้าหมายที่ตั้งไว้</th>
+                        <th>ต้องเติม (ลิตร)</th>
+                        <th>จัดสรรลงรถบรรทุก (Fleet Allocation)</th>
+                    </tr>
+                </thead>
                 <tbody id="res_table_body"></tbody>
             </table>
 
-            <!-- ส่วนปุ่ม Advanced -->
-            <button class="btn" style="margin-top: 25px; background-color: #e2e8f0; color: #475569;" onclick="toggleAdvancedInfo()">🔍 Advanced: ดูสูตรการคำนวณอย่างละเอียด</button>
+            <button class="btn" style="margin-top: 25px; background-color: #e2e8f0; color: #475569;" onclick="toggleAdvancedInfo()">🔍 Advanced: ดูสูตรการคำนวณ Stock Day อย่างละเอียด</button>
             
-            <!-- กล่องสูตร (เนื้อหาจะถูกสร้างและเขียนทับใหม่โดย JS) -->
-            <div id="advanced_info" class="adv-box" style="display:none;">
-                <h4 style="margin-top:0; color: #1e293b;">📐 สูตรและตัวแปรที่ใช้ (IRP Mathematical Model)</h4>
-                <strong>1. การหาระยะทาง (Haversine Formula)</strong><br>
-                ระบบคำนวณระยะทางบนพื้นผิวโลกโค้งจาก ละติจูด/ลองจิจูด:<br>
-                \( R = 6371 \) (รัศมีโลก กม.)<br>
-                \( \Delta Lat = (Lat_2 - Lat_1) \times \frac{\pi}{180} \)<br>
-                \( \Delta Lng = (Lng_2 - Lng_1) \times \frac{\pi}{180} \)<br>
-                \( a = \sin^2\left(\frac{\Delta Lat}{2}\right) + \cos(Lat_1) \cdot \cos(Lat_2) \cdot \sin^2\left(\frac{\Delta Lng}{2}\right) \)<br>
-                \( Distance = 2 \cdot R \cdot \text{atan2}\left(\sqrt{a}, \sqrt{1-a}\right) \)<br><br>
+            <div id="advanced_info" class="adv-box" style="display:none;"></div>
+        </div>
+    </div>
 
-                <strong>2. เป้าหมายระดับน้ำมัน (Inventory Constraint)</strong><br>
-                \( Target\_Vol = Max\_Capacity \times Target\_Percent \)<br>
-                \( Need\_To\_Fill = \max(0, Target\_Vol - Current\_Vol) \)<br><br>
-
-                <strong>3. อัลกอริทึมจัดสรรรถบรรทุก (Heuristic Compartment Allocation)</strong><br>
-                จัดสรรน้ำมันลงช่องว่างในรถบรรทุก (Truck Compartments) ทีละช่อง:<br>
-                \( Remaining\_Need = Need\_To\_Fill \)<br>
-                \( \text{For each } Compartment_i: \)<br>
-                &nbsp;&nbsp;\( Load = \min(Compartment_i, Remaining\_Need) \)<br>
-                &nbsp;&nbsp;\( Compartment_i = Compartment_i - Load \)<br>
-                &nbsp;&nbsp;\( Remaining\_Need = Remaining\_Need - Load \)
+    <!-- MAIN TAB 2: Master Data -->
+    <div id="tab-master" class="tab-content">
+        <div class="sub-tabs-wrapper">
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" onclick="openSubTab(event, 'sub-station')">1. ปั๊มน้ำมัน & สเปกถัง</button>
+                <button class="sub-tab-btn" onclick="openSubTab(event, 'sub-depot')">2. คลังน้ำมัน</button>
+                <button class="sub-tab-btn" onclick="openSubTab(event, 'sub-truck')">3. กองยานรถขนส่ง</button>
             </div>
+        </div>
+
+        <!-- SUB-TAB 1: ปั๊มน้ำมัน & สเปกถัง -->
+        <div id="sub-station" class="sub-tab-content active">
+            <h3 style="margin-top:0;">ข้อมูลสถานีปลายทางและสเปกถังน้ำมัน (Station Master Data)</h3>
+            
+            <div class="form-group">
+                <label>📂 โหลดข้อมูลจาก Google Sheets ของคุณ</label>
+                <select id="db_station_list" class="select-db" onchange="loadStationData()">
+                    <option value="">-- กรุณาลงชื่อเข้าใช้เพื่อดึงข้อมูล --</option>
+                </select>
+            </div>
+
+            <div class="grid-2 form-group">
+                <div><label>รหัสปั๊ม</label><input type="text" id="st_id" placeholder="เช่น ST-001"></div>
+                <div><label>ชื่อปั๊มน้ำมัน</label><input type="text" id="st_name" placeholder="เช่น ปั๊มสาขา A"></div>
+            </div>
+
+            <label>ปักหมุดที่ตั้งบนแผนที่</label>
+            <div id="map_station" class="map-container"></div>
+            <div class="grid-2 form-group">
+                <div><label>ละติจูด (Lat)</label><input type="text" id="st_lat" value="13.800000" readonly style="background:#eee;"></div>
+                <div><label>ลองจิจูด (Lng)</label><input type="text" id="st_lng" value="100.550000" readonly style="background:#eee;"></div>
+            </div>
+
+            <div class="divider"></div>
+            <h4 style="margin-top:0; color:#333;">📦 สเปกถังน้ำมันประจำปั๊ม (บันทึกเฉพาะ ประเภท และ ความจุสูงสุด)</h4>
+            <div id="compartments_area">
+                <div class="comp-item" style="background:#fcfcfc; padding:15px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span style="font-weight:500;">ถังที่ 1</span>
+                    </div>
+                    <div class="grid-2 form-group" style="margin-bottom:0;">
+                        <div><label>ประเภทน้ำมัน</label><input type="text" class="c_type" value="G95"></div>
+                        <div><label>ความจุสูงสุด (ลิตร)</label><input type="number" class="c_max" value="10000"></div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-add" onclick="addCompartment()">+ เพิ่มถังน้ำมันให้ปั๊มนี้</button>
+
+            <button class="btn btn-submit" style="margin-top:10px; margin-bottom:20px;" onclick="saveStation()">💾 บันทึกปั๊มและสเปกถังลง Google Sheets</button>
+        </div>
+
+        <!-- SUB-TAB 2: คลังน้ำมัน -->
+        <div id="sub-depot" class="sub-tab-content">
+            <h3 style="margin-top:0;">ข้อมูลคลังต้นทาง (Depot)</h3>
+            
+            <div class="form-group">
+                <label>📂 โหลดข้อมูลจาก Google Sheets ของคุณ</label>
+                <select id="db_depot_list" class="select-db" onchange="loadDepotData()">
+                    <option value="">-- กรุณาลงชื่อเข้าใช้เพื่อดึงข้อมูล --</option>
+                </select>
+            </div>
+
+            <div class="grid-2 form-group">
+                <div><label>รหัสคลัง</label><input type="text" id="dp_id" placeholder="เช่น DP-001"></div>
+                <div><label>ชื่อคลังน้ำมัน</label><input type="text" id="dp_name" placeholder="เช่น คลังหลัก"></div>
+            </div>
+
+            <label>ปักหมุดที่ตั้งคลังน้ำมัน</label>
+            <div id="map_depot" class="map-container"></div>
+            <div class="grid-2 form-group">
+                <div><label>ละติจูด (Lat)</label><input type="text" id="dp_lat" value="13.700000" readonly style="background:#eee;"></div>
+                <div><label>ลองจิจูด (Lng)</label><input type="text" id="dp_lng" value="100.450000" readonly style="background:#eee;"></div>
+            </div>
+            
+            <button class="btn btn-submit" onclick="saveDepot()">💾 บันทึกคลังนี้ลง Google Sheets</button>
+        </div>
+
+        <!-- SUB-TAB 3: กองยานรถขนส่ง -->
+        <div id="sub-truck" class="sub-tab-content">
+            <h3 style="margin-top:0;">ข้อมูลกองยานพาหนะขนส่ง (Fleet Management)</h3>
+            <p style="font-size:13.5px; color:var(--text-light); margin-bottom:20px;">เพิ่มหรือจัดการรถบรรทุกน้ำมันในสังกัดเพื่อจัดสรรงานร่วมกัน</p>
+            
+            <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:10px; padding:20px; margin-bottom:20px;">
+                <h4 style="margin:0 0 15px 0; font-size:14px; color:#1e293b;">🚛 เพิ่มรถบรรทุกใหม่เข้ากองยาน</h4>
+                <div class="grid-3 form-group" style="margin-bottom:12px;">
+                    <div>
+                        <label>ทะเบียนรถ</label>
+                        <input type="text" id="tr_plate" value="1กข-1234" placeholder="เช่น 1กข-1234">
+                    </div>
+                    <div>
+                        <label>ขนาดช่องน้ำมัน (แบ่งด้วย /)</label>
+                        <input type="text" id="tr_compartments" value="4000/4000/4000/4000" onchange="updateTruckCap()" placeholder="เช่น 4000/4000/4000">
+                    </div>
+                    <div>
+                        <label>ความจุรวม (ลิตร)</label>
+                        <input type="number" id="tr_capacity" value="16000" readonly style="background:#eee;">
+                    </div>
+                </div>
+                <button class="btn btn-add" style="margin-bottom:0;" onclick="addTruckToFleet()">+ เพิ่มรถบรรทุกคันนี้เข้ากองยาน</button>
+            </div>
+
+            <h4 style="margin:20px 0 10px 0; color:#333; display:flex; justify-content:space-between; align-items:center;">
+                <span>📋 รายการรถในกองยาน (<span id="fleet_count">1</span> คัน)</span>
+                <span style="font-size:13px; font-weight:normal; color:#2e7d32;">ความจุรวมกองยาน: <strong id="fleet_total_cap">16,000</strong> ลิตร</span>
+            </h4>
+            <table class="result-table" style="margin-top:5px;">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">คันที่</th>
+                        <th>ทะเบียนรถ</th>
+                        <th>ขนาดช่อง (Compartments)</th>
+                        <th>ความจุรวม</th>
+                        <th style="width: 60px; text-align:center;">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="fleet_table_body"></tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -238,14 +347,18 @@
     // ==========================================
     // 🔴 1. กำหนด CLIENT_ID จาก Google Cloud Console
     // ==========================================
-    const CLIENT_ID = '645134551483-ssafa56gt0jq690n864vknb68ne4isi1.apps.googleusercontent.com'; 
+    const CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com'; 
     let SPREADSHEET_ID = ''; 
 
     const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
     let tokenClient;
-    let stationData = [], depotData = [];
+    let stationData = [], depotData = [], tankLogsData = [];
     let mapStation, mapDepot, markerStation, markerDepot;
     let mapStationInitialized = false, mapDepotInitialized = false, compCount = 1;
+
+    let fleetList = [
+        { plate: "1กข-1234", compartments: [4000, 4000, 4000, 4000], capacity: 16000 }
+    ];
 
     function gapiLoaded() {
         gapi.load('client', async () => {
@@ -276,11 +389,11 @@
 
     function handleAuthClick() {
         if (window.location.protocol === 'file:') {
-            alert("⚠️ ระบบ Google Sign-in ไม่รองรับการเปิดไฟล์ตรงๆ (file://)\n\nวิธีแก้: กรุณารันผ่าน Local Server (เช่น ใช้ extension 'Live Server' ใน VSCode) หรืออัปโหลดขึ้น Web Hosting ครับ");
+            alert("⚠️ ระบบ Google Sign-in ไม่รองรับการเปิดไฟล์ตรงๆ (file://)\n\nวิธีแก้: กรุณารันผ่าน Local Server หรืออัปโหลดขึ้น GitHub Pages ครับ");
             return;
         }
         if (CLIENT_ID === 'YOUR_CLIENT_ID.apps.googleusercontent.com' || CLIENT_ID.trim() === '') {
-            alert("⚠️ คุณยังไม่ได้ตั้งค่า CLIENT_ID\n\nระบบไม่สามารถเรียกหน้าต่างล็อกอินได้ กรุณาไปสร้าง OAuth Client ID ใน Google Cloud แล้วนำมาใส่ในโค้ดบรรทัดที่ 238 ครับ");
+            alert("⚠️ คุณยังไม่ได้ตั้งค่า CLIENT_ID กรุณานำ OAuth Client ID มาใส่ในโค้ดครับ");
             return;
         }
         if (!tokenClient) {
@@ -299,7 +412,7 @@
             }
         } catch (error) {
             console.error("Login Error: ", error);
-            alert("เกิดข้อผิดพลาดในการเรียกหน้าต่าง Login (ดูรายละเอียดใน Console)");
+            alert("เกิดข้อผิดพลาดในการเรียกหน้าต่าง Login");
         }
     }
 
@@ -317,7 +430,11 @@
                 let createRes = await gapi.client.sheets.spreadsheets.create({
                     resource: {
                         properties: { title: "Logistics_Optimization_DB" },
-                        sheets: [{ properties: { title: "Stations" } }, { properties: { title: "Depots" } }]
+                        sheets: [
+                            { properties: { title: "Stations" } },
+                            { properties: { title: "Depots" } },
+                            { properties: { title: "Tank_Logs" } }
+                        ]
                     }
                 });
                 SPREADSHEET_ID = createRes.result.spreadsheetId;
@@ -327,8 +444,9 @@
                     resource: {
                         valueInputOption: "USER_ENTERED",
                         data: [
-                            { range: "Stations!A1:D1", values: [["รหัสปั๊ม", "ชื่อปั๊ม", "Lat", "Lng"]] },
-                            { range: "Depots!A1:D1", values: [["รหัสคลัง", "ชื่อคลัง", "Lat", "Lng"]] }
+                            { range: "Stations!A1:E1", values: [["รหัสปั๊ม", "ชื่อปั๊ม", "Lat", "Lng", "สเปกถัง (JSON)"]] },
+                            { range: "Depots!A1:D1", values: [["รหัสคลัง", "ชื่อคลัง", "Lat", "Lng"]] },
+                            { range: "Tank_Logs!A1:E1", values: [["Timestamp", "รหัสปั๊ม", "ชื่อปั๊ม", "ปริมาณน้ำมันคงเหลือ & ยอดขาย (JSON)", "หมายเหตุ"]] }
                         ]
                     }
                 });
@@ -342,85 +460,659 @@
 
     async function fetchDataFromSheets() {
         try {
-            let resStation = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Stations!A2:D' });
+            let resStation = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Stations!A2:E' });
             stationData = resStation.result.values || [];
             updateDropdown('db_station_list', stationData, 'เพิ่มปั๊มใหม่ (กรอกข้อมูลด้านล่าง)');
 
             let resDepot = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Depots!A2:D' });
             depotData = resDepot.result.values || [];
             updateDropdown('db_depot_list', depotData, 'เพิ่มคลังใหม่ (กรอกข้อมูลด้านล่าง)');
+            updateDropdown('opt_depot_select', depotData, 'เลือกคลังต้นทาง');
+
+            try {
+                let resLogs = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Tank_Logs!A2:D' });
+                tankLogsData = resLogs.result.values || [];
+            } catch(e) { tankLogsData = []; }
+
+            initInitialStop();
         } catch (err) { console.error(err); }
     }
 
     function updateDropdown(elementId, dataList, defaultText) {
         let select = document.getElementById(elementId);
-        select.innerHTML = `<option value="">-- ${defaultText} --</option>`;
+        if (!select) return;
+        updateDropdownElement(select, dataList, defaultText);
+    }
+
+    function updateDropdownElement(selectEl, dataList, defaultText) {
+        selectEl.innerHTML = `<option value="">-- ${defaultText} --</option>`;
         dataList.forEach((row, index) => {
-            if(row.length > 0) select.innerHTML += `<option value="${index}">[${row[0]}] ${row[1]}</option>`;
+            if(row.length > 0) selectEl.innerHTML += `<option value="${index}">[${row[0]}] ${row[1]}</option>`;
         });
+    }
+
+    // ==========================================
+    // 📦 Master Data: สเปกถังน้ำมัน
+    // ==========================================
+    function getTankSpecsJSON() {
+        let specs = [];
+        document.querySelectorAll('#compartments_area .comp-item').forEach(item => {
+            specs.push({
+                type: item.querySelector('.c_type').value.trim() || 'G95',
+                max: parseInt(item.querySelector('.c_max').value) || 10000
+            });
+        });
+        return JSON.stringify(specs);
+    }
+
+    function renderSpecsInMasterTab(specs) {
+        let area = document.getElementById('compartments_area');
+        area.innerHTML = '';
+        compCount = 0;
+
+        if (!specs || specs.length === 0) {
+            specs = [{ type: 'G95', max: 10000 }];
+        }
+
+        specs.forEach((c) => {
+            compCount++;
+            let div = document.createElement('div');
+            div.className = "comp-item";
+            div.style.cssText = "background:#fcfcfc; padding:15px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:10px;";
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span style="font-weight:500;">ถังที่ ${compCount}</span>
+                    ${compCount > 1 ? `<button type="button" style="background:#fee2e2; color:#b91c1c; border:none; border-radius:4px; padding:2px 8px; cursor:pointer; font-size:12px;" onclick="this.closest('.comp-item').remove()">✕ ลบถัง</button>` : ''}
+                </div>
+                <div class="grid-2 form-group" style="margin-bottom:0;">
+                    <div><label>ประเภทน้ำมัน</label><input type="text" class="c_type" value="${c.type || ''}"></div>
+                    <div><label>ความจุสูงสุด (ลิตร)</label><input type="number" class="c_max" value="${c.max || 0}"></div>
+                </div>
+            `;
+            area.appendChild(div);
+        });
+    }
+
+    async function saveStation() {
+        if (!SPREADSHEET_ID) return alert('กรุณาลงชื่อเข้าใช้ Google ก่อนครับ');
+        let stId = document.getElementById('st_id').value.trim();
+        let stName = document.getElementById('st_name').value.trim();
+        let stLat = document.getElementById('st_lat').value.trim();
+        let stLng = document.getElementById('st_lng').value.trim();
+        let specJson = getTankSpecsJSON();
+
+        if (!stId || !stName) return alert('กรุณากรอกรหัสปั๊มและชื่อปั๊ม');
+
+        let values = [[ stId, stName, stLat, stLng, specJson ]];
+        try {
+            await gapi.client.sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEET_ID, 
+                range: 'Stations!A:E', 
+                valueInputOption: 'USER_ENTERED', 
+                resource: { values: values }
+            });
+            alert('บันทึกสเปกปั๊มและขนาดถังสำเร็จ!');
+            fetchDataFromSheets();
+        } catch(err) { console.error(err); alert('บันทึกไม่สำเร็จ'); }
     }
 
     function loadStationData() {
         let index = document.getElementById('db_station_list').value;
-        if (index === "") return clearForm('st');
+        if (index === "") {
+            clearForm('st');
+            renderSpecsInMasterTab([]);
+            return;
+        }
+
         let row = stationData[index];
         document.getElementById('st_id').value = row[0] || '';
         document.getElementById('st_name').value = row[1] || '';
         document.getElementById('st_lat').value = row[2] || '';
         document.getElementById('st_lng').value = row[3] || '';
+        
+        let parsedSpecs = [];
+        if (row[4]) {
+            try { parsedSpecs = JSON.parse(row[4]); } catch(e) {}
+        }
+        renderSpecsInMasterTab(parsedSpecs);
+
         let latlng = [parseFloat(row[2]), parseFloat(row[3])];
         if(mapStation) { mapStation.setView(latlng, 14); markerStation.setLatLng(latlng); }
     }
 
-    function loadDepotData() {
-        let index = document.getElementById('db_depot_list').value;
-        if (index === "") return clearForm('dp');
-        let row = depotData[index];
-        document.getElementById('dp_id').value = row[0] || '';
-        document.getElementById('dp_name').value = row[1] || '';
-        document.getElementById('dp_lat').value = row[2] || '';
-        document.getElementById('dp_lng').value = row[3] || '';
-        let latlng = [parseFloat(row[2]), parseFloat(row[3])];
-        if(mapDepot) { mapDepot.setView(latlng, 14); markerDepot.setLatLng(latlng); }
+    function addCompartment() {
+        compCount++;
+        let div = document.createElement('div');
+        div.className = "comp-item";
+        div.style.cssText = "background:#fcfcfc; padding:15px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:10px;";
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span style="font-weight:500;">ถังที่ ${compCount}</span>
+                <button type="button" style="background:#fee2e2; color:#b91c1c; border:none; border-radius:4px; padding:2px 8px; cursor:pointer; font-size:12px;" onclick="this.closest('.comp-item').remove()">✕ ลบถัง</button>
+            </div>
+            <div class="grid-2 form-group" style="margin-bottom:0;">
+                <div><label>ประเภทน้ำมัน</label><input type="text" class="c_type" placeholder="เช่น B7"></div>
+                <div><label>ความจุสูงสุด (ลิตร)</label><input type="number" class="c_max" placeholder="เช่น 10000"></div>
+            </div>
+        `;
+        document.getElementById('compartments_area').appendChild(div);
     }
 
-    function clearForm(prefix) {
-        document.getElementById(`${prefix}_id`).value = "";
-        document.getElementById(`${prefix}_name`).value = "";
+    // ==========================================
+    // 🚚 หน้าแรก: Dynamic Stop, Dipstick & Daily Sales
+    // ==========================================
+    function initInitialStop() {
+        let container = document.getElementById('station_stops_container');
+        if (container.children.length === 0) {
+            addStationDeliveryStop();
+        } else {
+            document.querySelectorAll('.opt_station_select').forEach(sel => {
+                let currentVal = sel.value;
+                updateDropdownElement(sel, stationData, 'เลือกปั๊มปลายทาง');
+                sel.value = currentVal;
+            });
+        }
     }
 
-    async function saveStation() {
+    function addStationDeliveryStop() {
+        let container = document.getElementById('station_stops_container');
+        let stopCount = container.children.length;
+        let cardId = `stop_card_${stopCount}`;
+        
+        let card = document.createElement('div');
+        card.className = 'station-stop-card';
+        card.id = cardId;
+        card.innerHTML = `
+            <div class="station-stop-header">
+                <div>
+                    <span class="station-stop-badge">จุดส่งที่ ${stopCount + 1}</span>
+                    <span id="${cardId}_time" class="station-last-updated" style="margin-left: 10px;">🕒 ยังไม่มีข้อมูลวัดระดับ</span>
+                </div>
+                ${stopCount > 0 ? `<button type="button" class="btn-remove-stop" onclick="removeStationDeliveryStop('${cardId}')">✕</button>` : ''}
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <select class="select-db opt_station_select" onchange="onStationStopSelected('${cardId}', this.value)">
+                    <option value="">-- เลือกปั๊มปลายทาง --</option>
+                </select>
+            </div>
+            <div id="${cardId}_tanks_area"></div>
+        `;
+        container.appendChild(card);
+
+        let selectEl = card.querySelector('.opt_station_select');
+        updateDropdownElement(selectEl, stationData, 'เลือกปั๊มปลายทาง');
+    }
+
+    function removeStationDeliveryStop(cardId) {
+        let card = document.getElementById(cardId);
+        if (card) {
+            card.remove();
+            reindexDeliveryStops();
+        }
+    }
+
+    function reindexDeliveryStops() {
+        let cards = document.querySelectorAll('.station-stop-card');
+        cards.forEach((card, idx) => {
+            card.querySelector('.station-stop-badge').innerText = `จุดส่งที่ ${idx + 1}`;
+        });
+    }
+
+    function onStationStopSelected(cardId, stationIdx) {
+        let tanksArea = document.getElementById(`${cardId}_tanks_area`);
+        let timeLabel = document.getElementById(`${cardId}_time`);
+        tanksArea.innerHTML = "";
+
+        if (stationIdx === "") {
+            timeLabel.innerText = "🕒 ยังไม่มีข้อมูลวัดระดับ";
+            return;
+        }
+
+        let st = stationData[stationIdx];
+        let stId = st[0];
+        let specs = [];
+        if (st[4]) {
+            try { specs = JSON.parse(st[4]); } catch(e) {}
+        }
+        if (specs.length === 0) specs = [{ type: 'G95', max: 10000 }];
+
+        let lastLog = null;
+        for (let i = tankLogsData.length - 1; i >= 0; i--) {
+            if (tankLogsData[i][1] === stId) {
+                lastLog = tankLogsData[i];
+                break;
+            }
+        }
+
+        let prevValues = [];
+        if (lastLog) {
+            timeLabel.innerText = `🕒 อัปเดตล่าสุด: ${lastLog[0]}`;
+            try { prevValues = JSON.parse(lastLog[3]); } catch(e) {}
+        } else {
+            timeLabel.innerText = `🕒 อัปเดตล่าสุด: ยังไม่เคยบันทึก`;
+        }
+
+        let headerRow = document.createElement('div');
+        headerRow.style.cssText = "display:grid; grid-template-columns:85px 120px 130px 130px 110px; gap:10px; font-size:12px; font-weight:600; color:#64748b; padding:0 12px 4px 12px;";
+        headerRow.innerHTML = `
+            <div>ชนิดน้ำมัน</div>
+            <div>ความจุ (Deadstock 10%)</div>
+            <div>คงเหลือจริง (L)</div>
+            <div>ยอดขายเฉลี่ย (L/วัน)</div>
+            <div style="text-align:center;">Stock Days</div>
+        `;
+        tanksArea.appendChild(headerRow);
+
+        specs.forEach((sp, idx) => {
+            let prevCurr = (prevValues[idx] && prevValues[idx].curr !== undefined) ? prevValues[idx].curr : 0;
+            let prevSales = (prevValues[idx] && prevValues[idx].sales !== undefined) ? prevValues[idx].sales : 1500;
+            let deadStock = Math.round(sp.max * 0.10);
+
+            let row = document.createElement('div');
+            row.className = "tank-input-row";
+            row.id = `${cardId}_tank_row_${idx}`;
+            row.innerHTML = `
+                <div><span class="tank-type-tag">${sp.type}</span></div>
+                <div style="color:#64748b; font-size:11.5px;">
+                    ${sp.max.toLocaleString()} L<br>
+                    <span style="color:#b91c1c;">(DS: ${deadStock.toLocaleString()})</span>
+                </div>
+                <div>
+                    <input type="number" class="tank-curr-input" placeholder="คงเหลือ" value="${prevCurr}" 
+                           data-type="${sp.type}" data-max="${sp.max}" 
+                           onchange="updateDynamicStockDay('${cardId}_tank_row_${idx}'); validateTankCapacity(this);">
+                </div>
+                <div>
+                    <input type="number" class="tank-sales-input" placeholder="ยอดขาย/วัน" value="${prevSales}" 
+                           data-type="${sp.type}" 
+                           onchange="updateDynamicStockDay('${cardId}_tank_row_${idx}')">
+                </div>
+                <div style="text-align:center;">
+                    <span class="tank-days-badge badge badge-warning">-</span>
+                </div>
+            `;
+            tanksArea.appendChild(row);
+            updateDynamicStockDay(`${cardId}_tank_row_${idx}`);
+        });
+    }
+
+    function updateDynamicStockDay(rowId) {
+        let row = document.getElementById(rowId);
+        if (!row) return;
+
+        let currInput = row.querySelector('.tank-curr-input');
+        let salesInput = row.querySelector('.tank-sales-input');
+        let badge = row.querySelector('.tank-days-badge');
+
+        let maxCap = parseFloat(currInput.dataset.max) || 0;
+        let currVol = parseFloat(currInput.value) || 0;
+        let sales = parseFloat(salesInput.value) || 0;
+        let deadStock = maxCap * 0.10;
+
+        if (sales <= 0) {
+            badge.innerText = "ไม่มียอดขาย";
+            badge.className = "tank-days-badge badge badge-warning";
+            return;
+        }
+
+        let usableStock = Math.max(0, currVol - deadStock);
+        let stockDays = usableStock / sales;
+
+        badge.innerText = `${stockDays.toFixed(1)} วัน`;
+        if (stockDays <= 2.0) {
+            badge.className = "tank-days-badge badge badge-danger";
+        } else if (stockDays <= 4.0) {
+            badge.className = "tank-days-badge badge badge-warning";
+        } else {
+            badge.className = "tank-days-badge badge badge-success";
+        }
+    }
+
+    function validateTankCapacity(input) {
+        let val = parseFloat(input.value) || 0;
+        let max = parseFloat(input.dataset.max) || 0;
+        let type = input.dataset.type;
+
+        if (val < 0) {
+            alert("⚠️ ปริมาณน้ำมันไม่สามารถติดลบได้");
+            input.value = 0;
+            return;
+        }
+
+        if (val > max) {
+            alert(`⚠️ ปริมาณน้ำมันเกินความจุถัง!\n\nถังชนิด ${type} มีความจุสูงสุดเพียง ${max.toLocaleString()} ลิตร\n(ระบบปรับค่ากลับเป็นความจุสูงสุดให้โดยอัตโนมัติ)`);
+            input.value = max;
+        }
+    }
+
+    function collectSelectedStops() {
+        let stopCards = document.querySelectorAll('.station-stop-card');
+        let selectedStops = [];
+        let hasExceeded = false;
+
+        for (let card of stopCards) {
+            let sel = card.querySelector('.opt_station_select');
+            if (sel.value !== "") {
+                let st = stationData[sel.value];
+                let tanks = [];
+
+                card.querySelectorAll('.tank-input-row').forEach(row => {
+                    let currInput = row.querySelector('.tank-curr-input');
+                    let salesInput = row.querySelector('.tank-sales-input');
+
+                    let type = currInput.dataset.type;
+                    let max = parseFloat(currInput.dataset.max);
+                    let curr = parseFloat(currInput.value) || 0;
+                    let sales = parseFloat(salesInput.value) || 0;
+
+                    if (curr > max) hasExceeded = true;
+                    tanks.push({ type: type, max: max, curr: curr, sales: sales });
+                });
+
+                if (hasExceeded) {
+                    alert("กรุณาแก้ไขค่าน้ำมันคงเหลือที่เกินความจุถังก่อนดำเนินการ");
+                    return null;
+                }
+
+                selectedStops.push({
+                    cardId: card.id,
+                    id: st[0],
+                    name: st[1],
+                    lat: parseFloat(st[2]),
+                    lng: parseFloat(st[3]),
+                    tanks: tanks
+                });
+            }
+        }
+        return selectedStops;
+    }
+
+    // =========================================================================
+    // 🎨 ฟังก์ชันสร้างกราฟิก Minimal Pastel Tank Gauges
+    // =========================================================================
+    function renderPastelTankGauges(selectedStops, timeStr) {
+        let section = document.getElementById('visual_gauges_section');
+        let container = document.getElementById('visual_gauges_container');
+        let timeStampLabel = document.getElementById('gauges_time_stamp');
+        
+        container.innerHTML = "";
+        timeStampLabel.innerText = `🕒 บันทึกสำเร็จเมื่อ: ${timeStr}`;
+
+        selectedStops.forEach(st => {
+            let stBlock = document.createElement('div');
+            stBlock.style.cssText = "margin-bottom: 20px;";
+            stBlock.innerHTML = `<h5 style="margin: 0 0 10px 0; font-size: 14px; color: #334155;">📍 ${st.name} (${st.id})</h5>`;
+
+            let grid = document.createElement('div');
+            grid.className = "tank-visual-grid";
+
+            st.tanks.forEach(tank => {
+                let percent = Math.min(100, Math.round((tank.curr / tank.max) * 100));
+                let deadStock = tank.max * 0.10;
+                let usableStock = Math.max(0, tank.curr - deadStock);
+                let stockDays = tank.sales > 0 ? (usableStock / tank.sales) : 0;
+
+                // กำหนดสี Pastel ตามระดับ Stock Day
+                let liquidColor = "#b7e4c7"; // pastel green
+                let badgeClass = "badge-success";
+
+                if (stockDays <= 2.0) {
+                    liquidColor = "#ffc2d1"; // pastel red/pink
+                    badgeClass = "badge-danger";
+                } else if (stockDays <= 4.0) {
+                    liquidColor = "#fef08a"; // pastel yellow
+                    badgeClass = "badge-warning";
+                }
+
+                let card = document.createElement('div');
+                card.className = "tank-gauge-card";
+                card.innerHTML = `
+                    <span class="tank-gauge-type">${tank.type}</span>
+                    <div class="tank-cylinder-container">
+                        <div class="tank-deadstock-line"></div>
+                        <div class="tank-deadstock-tag">10%</div>
+                        <div class="tank-liquid" style="height: ${percent}%; background-color: ${liquidColor};"></div>
+                    </div>
+                    <div class="tank-gauge-vol"><strong>${tank.curr.toLocaleString()}</strong> / ${tank.max.toLocaleString()} L</div>
+                    <div style="font-size: 11px; color: #94a3b8;">(${percent}% ของถัง)</div>
+                    <span class="tank-gauge-days badge ${badgeClass}">
+                        ${tank.sales > 0 ? `${stockDays.toFixed(1)} วัน` : 'ไม่มียอดขาย'}
+                    </span>
+                `;
+                grid.appendChild(card);
+            });
+
+            stBlock.appendChild(grid);
+            container.appendChild(stBlock);
+        });
+
+        section.style.display = "block";
+    }
+
+    // =========================================================================
+    // 🔘 ACTION 1: บันทึกระดับน้ำมันคงเหลือ & ยอดขาย พร้อมเรนเดอร์กราฟิก
+    // =========================================================================
+    async function saveTankLogsAction() {
         if (!SPREADSHEET_ID) return alert('กรุณาลงชื่อเข้าใช้ Google ก่อนครับ');
-        let values = [[ document.getElementById('st_id').value, document.getElementById('st_name').value, document.getElementById('st_lat').value, document.getElementById('st_lng').value ]];
+
+        let selectedStops = collectSelectedStops();
+        if (!selectedStops || selectedStops.length === 0) {
+            return alert("⚠️ กรุณาเลือก 'ปั๊มปลายทาง' ที่ต้องการบันทึกระดับน้ำมันอย่างน้อย 1 ปั๊มครับ");
+        }
+
+        let now = new Date();
+        let timeStr = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH');
+        let logRows = [];
+
+        selectedStops.forEach(st => {
+            logRows.push([ timeStr, st.id, st.name, JSON.stringify(st.tanks), "บันทึกระดับน้ำมันและยอดขายประจำวัน" ]);
+            let timeLabel = document.getElementById(`${st.cardId}_time`);
+            if (timeLabel) timeLabel.innerText = `🕒 อัปเดตล่าสุด: ${timeStr}`;
+        });
+
         try {
             await gapi.client.sheets.spreadsheets.values.append({
-                spreadsheetId: SPREADSHEET_ID, range: 'Stations!A:D', valueInputOption: 'USER_ENTERED', resource: { values: values }
+                spreadsheetId: SPREADSHEET_ID,
+                range: 'Tank_Logs!A:E',
+                valueInputOption: 'USER_ENTERED',
+                resource: { values: logRows }
             });
-            alert('บันทึกข้อมูลปั๊มสำเร็จ!');
-            fetchDataFromSheets();
-        } catch(err) { console.error(err); alert('บันทึกไม่สำเร็จ'); }
+            logRows.forEach(r => tankLogsData.push(r));
+
+            // แสดงผลกราฟิกมินิมอลพาสเทลทันที
+            renderPastelTankGauges(selectedStops, timeStr);
+            alert(`✅ บันทึกระดับน้ำมันคงเหลือและยอดขายเฉลี่ยสำเร็จ!\nอัปเดตข้อมูลเมื่อ: ${timeStr}`);
+        } catch(err) {
+            console.error("Save log error:", err);
+            alert("บันทึกระดับน้ำมันไม่สำเร็จ");
+        }
     }
 
-    async function saveDepot() {
-        if (!SPREADSHEET_ID) return alert('กรุณาลงชื่อเข้าใช้ Google ก่อนครับ');
-        let values = [[ document.getElementById('dp_id').value, document.getElementById('dp_name').value, document.getElementById('dp_lat').value, document.getElementById('dp_lng').value ]];
-        try {
-            await gapi.client.sheets.spreadsheets.values.append({
-                spreadsheetId: SPREADSHEET_ID, range: 'Depots!A:D', valueInputOption: 'USER_ENTERED', resource: { values: values }
-            });
-            alert('บันทึกข้อมูลคลังสำเร็จ!');
-            fetchDataFromSheets();
-        } catch(err) { console.error(err); alert('บันทึกไม่สำเร็จ'); }
+    // =========================================================================
+    // 🔘 ACTION 2: ประมวลผลแผนจัดส่ง (อิง Stock Days กำหนดเอง)
+    // =========================================================================
+    function calculateOptimizationAction() {
+        let dpVal = document.getElementById('opt_depot_select').value;
+        if (dpVal === "") {
+            return alert("⚠️ กรุณาเลือก 'คลังน้ำมันต้นทาง' ก่อนกดประมวลผลครับ");
+        }
+
+        let targetDays = parseFloat(document.getElementById('st_target_days').value);
+        if (isNaN(targetDays) || targetDays <= 0) {
+            return alert("⚠️ กรุณากำหนด 'เป้าหมายสต็อกปลอดภัย (Target Days)' เป็นตัวเลขที่มากกว่า 0 ครับ");
+        }
+
+        let selectedStops = collectSelectedStops();
+        if (!selectedStops || selectedStops.length === 0) {
+            return alert("⚠️ กรุณาเลือก 'ปั๊มปลายทาง' อย่างน้อย 1 ปั๊มเพื่อจัดส่งครับ");
+        }
+
+        calculateStockDayOptimization(selectedStops, dpVal, targetDays);
     }
 
-    function openTab(evt, tabName) {
+    function calculateStockDayOptimization(selectedStops, selectedDepotIndex, targetDays) {
+        let depot = depotData[selectedDepotIndex];
+        let dpLat = parseFloat(depot[2]), dpLng = parseFloat(depot[3]), dpName = depot[1];
+
+        let totalDistance = 0;
+        let routeString = `${dpName}`;
+        let currentLat = dpLat, currentLng = dpLng;
+
+        selectedStops.forEach((st, i) => {
+            totalDistance += calculateDistance(currentLat, currentLng, st.lat, st.lng);
+            routeString += ` ➔ [จุดที่ ${i+1}] ${st.name}`;
+            currentLat = st.lat; currentLng = st.lng;
+        });
+
+        totalDistance += calculateDistance(currentLat, currentLng, dpLat, dpLng);
+        routeString += ` ➔ กลับ${dpName}`;
+
+        document.getElementById('res_route').innerText = routeString;
+        document.getElementById('res_distance').innerText = totalDistance.toFixed(2);
+
+        let fleetMode = document.getElementById('opt_fleet_mode').value;
+        let activeFleet = (fleetMode === 'first') ? [fleetList[0]] : JSON.parse(JSON.stringify(fleetList));
+        let totalFleetCap = activeFleet.reduce((sum, tr) => sum + tr.capacity, 0);
+
+        let fleetCompartments = [];
+        activeFleet.forEach((truck, truckIdx) => {
+            truck.compartments.forEach((cap, cIdx) => {
+                fleetCompartments.push({
+                    plate: truck.plate,
+                    compIdx: cIdx + 1,
+                    available: cap
+                });
+            });
+        });
+
+        let tableBody = "", totalNeeded = 0, allTargetsMet = true;
+
+        selectedStops.forEach((st) => {
+            st.tanks.forEach((tank, compIdx) => {
+                let type = tank.type || "G95";
+                let maxCap = tank.max;
+                let currVol = tank.curr;
+                let sales = tank.sales || 0;
+                let deadStock = maxCap * 0.10;
+                let usableStock = Math.max(0, currVol - deadStock);
+                let currentStockDays = sales > 0 ? (usableStock / sales) : 99;
+
+                let targetVol = 0;
+                if (sales > 0) {
+                    targetVol = Math.min(maxCap, deadStock + (sales * targetDays));
+                } else {
+                    targetVol = maxCap * 0.8;
+                }
+
+                let needToFill = Math.max(0, Math.round(targetVol - currVol));
+                totalNeeded += needToFill;
+
+                let allocatedText = "";
+                let remainingNeed = needToFill;
+
+                if (needToFill > 0) {
+                    for (let c of fleetCompartments) {
+                        if (c.available > 0 && remainingNeed > 0) {
+                            let load = Math.min(c.available, remainingNeed);
+                            allocatedText += `<span style="display:inline-block; margin-bottom:2px;">🚛 <strong>${c.plate}</strong> [ช่อง ${c.compIdx}]: ${load.toLocaleString()}L</span><br>`;
+                            c.available -= load;
+                            remainingNeed -= load;
+                        }
+                    }
+                    if (remainingNeed > 0) {
+                        allocatedText += `<span style="color:red; font-size:12px; font-weight:600;">* ขาดอีก ${remainingNeed.toLocaleString()}L</span>`;
+                        allTargetsMet = false;
+                    }
+                } else {
+                    allocatedText = `<span style="color:#777;">สต็อกพอสำหรับ ${targetDays} วันแล้ว</span>`;
+                }
+
+                let daysBadgeColor = currentStockDays <= 2 ? "badge-danger" : (currentStockDays <= 4 ? "badge-warning" : "badge-success");
+
+                tableBody += `<tr>
+                    <td><strong>${st.name}</strong> - ถัง ${compIdx+1} (${type})<br>
+                        <span style="font-size:11.5px; color:#777;">ความจุ: ${maxCap.toLocaleString()}L | เหลือจริง: ${currVol.toLocaleString()}L</span>
+                    </td>
+                    <td><span class="badge ${daysBadgeColor}">${currentStockDays.toFixed(1)} วัน</span><br>
+                        <span style="font-size:11.5px; color:#64748b;">(ขาย ${sales.toLocaleString()} L/วัน)</span>
+                    </td>
+                    <td>เป้าหมาย <strong>${targetDays} วัน</strong><br>
+                        <span style="font-size:11.5px; color:#64748b;">(ระดับเป้า: ${Math.round(targetVol).toLocaleString()}L)</span>
+                    </td>
+                    <td><strong style="color:#2e7d32;">${needToFill.toLocaleString()}</strong></td>
+                    <td>${allocatedText}</td>
+                </tr>`;
+            });
+        });
+
+        document.getElementById('res_table_body').innerHTML = tableBody;
+        let statusEl = document.getElementById('res_status');
+        if (totalNeeded === 0) {
+            statusEl.innerHTML = `<span class="badge badge-warning">ระดับน้ำมันทุกถังพอสำหรับ ${targetDays} วันแล้ว ไม่ต้องจัดรถ</span>`;
+        } else if (allTargetsMet) {
+            statusEl.innerHTML = `<span class="badge badge-success">✅ คำนวณแผนสำเร็จ: เติมสต็อกถึงเกณฑ์ ${targetDays} วันครบถ้วน (ใช้กองยาน ${activeFleet.length} คัน)</span>`;
+        } else {
+            statusEl.innerHTML = `<span class="badge badge-danger">⚠️ ความจุกองยานไม่พอ! (ต้องการ ${totalNeeded.toLocaleString()}L / กองยานมี ${totalFleetCap.toLocaleString()}L)</span>`;
+        }
+        
+        document.getElementById('dashboard_result').style.display = 'block';
+
+        let advBox = document.getElementById('advanced_info');
+        advBox.innerHTML = `
+            <h4 style="margin-top:0; color: #1e293b;">📐 รายละเอียดแบบจำลองการเติมน้ำมันอิง Stock Day (Petroleum IRP Model)</h4>
+            <strong>1. สูตรคำนวณ Stock Day และ Dead Stock:</strong><br>
+            \\( Dead\\_Stock = Max\\_Capacity \\times 10\\% \\)<br>
+            \\( Usable\\_Stock = \\max(0, Current\\_Vol - Dead\\_Stock) \\)<br>
+            \\( Stock\\_Days = \\frac{Usable\\_Stock}{Daily\\_Sales} \\)<br><br>
+
+            <strong>2. สูตรคำนวณปริมาณที่ต้องเติม (Replenishment Target - ${targetDays} วัน):</strong><br>
+            \\( Target\\_Vol = \\min\\big(Max\\_Capacity, Dead\\_Stock + (Daily\\_Sales \\times ${targetDays})\\big) \\)<br>
+            \\( Need\\_To\\_Fill = \\max(0, Target\\_Vol - Current\\_Vol) \\)<br><br>
+
+            <strong>3. สรุปภาพรวมกองยาน:</strong> ความต้องการน้ำมันรวม = <strong>${totalNeeded.toLocaleString()} L</strong> | ความจุกองยาน = <strong>${totalFleetCap.toLocaleString()} L</strong>
+        `;
+
+        if (window.MathJax) {
+            MathJax.typesetPromise([advBox]);
+        }
+    }
+
+    // Supporting Functions
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    }
+
+    function openMainTab(evt, tabName) {
         document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
-        document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+        document.querySelectorAll(".tabs .tab-btn").forEach(el => el.classList.remove("active"));
         document.getElementById(tabName).style.display = "block";
         setTimeout(() => document.getElementById(tabName).classList.add("active"), 10);
         evt.currentTarget.classList.add("active");
-        if (tabName === 'tab-station') { if (!mapStationInitialized) initMapStation(); else mapStation.invalidateSize(); }
-        if (tabName === 'tab-depot') { if (!mapDepotInitialized) initMapDepot(); else mapDepot.invalidateSize(); }
+
+        if (tabName === 'tab-master') {
+            if (document.getElementById('sub-station').classList.contains('active')) {
+                if (!mapStationInitialized) initMapStation(); else mapStation.invalidateSize();
+            } else if (document.getElementById('sub-depot').classList.contains('active')) {
+                if (!mapDepotInitialized) initMapDepot(); else mapDepot.invalidateSize();
+            }
+        }
+    }
+
+    function openSubTab(evt, subTabName) {
+        document.querySelectorAll(".sub-tab-content").forEach(el => el.style.display = "none");
+        document.querySelectorAll(".sub-tab-btn").forEach(el => el.classList.remove("active"));
+        document.getElementById(subTabName).style.display = "block";
+        setTimeout(() => document.getElementById(subTabName).classList.add("active"), 10);
+        evt.currentTarget.classList.add("active");
+
+        if (subTabName === 'sub-station') {
+            if (!mapStationInitialized) initMapStation(); else mapStation.invalidateSize();
+        }
+        if (subTabName === 'sub-depot') {
+            if (!mapDepotInitialized) initMapDepot(); else mapDepot.invalidateSize();
+        }
     }
 
     function initMapStation() {
@@ -441,18 +1133,42 @@
         mapDepotInitialized = true;
     }
 
-    function addCompartment() {
-        compCount++;
-        let div = document.createElement('div');
-        div.className = "comp-item";
-        div.style.cssText = "background:#fcfcfc; padding:15px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:10px;";
-        div.innerHTML = `<div style="font-weight:500; margin-bottom:10px;">ถังที่ ${compCount}</div>
-            <div class="grid-3 form-group" style="margin-bottom:0;">
-                <div><label>ประเภท</label><input type="text" class="c_type" placeholder="เช่น B7"></div>
-                <div><label>ความจุสูงสุด</label><input type="number" class="c_max" placeholder="เช่น 10000"></div>
-                <div><label>ปัจจุบันเหลือ</label><input type="number" class="c_curr" placeholder="เช่น 2000"></div>
-            </div>`;
-        document.getElementById('compartments_area').appendChild(div);
+    function loadDepotData() {
+        let index = document.getElementById('db_depot_list').value;
+        document.getElementById('opt_depot_select').value = index;
+        if (index === "") return clearForm('dp');
+        let row = depotData[index];
+        document.getElementById('dp_id').value = row[0] || '';
+        document.getElementById('dp_name').value = row[1] || '';
+        document.getElementById('dp_lat').value = row[2] || '';
+        document.getElementById('dp_lng').value = row[3] || '';
+        let latlng = [parseFloat(row[2]), parseFloat(row[3])];
+        if(mapDepot) { mapDepot.setView(latlng, 14); markerDepot.setLatLng(latlng); }
+    }
+
+    async function saveDepot() {
+        if (!SPREADSHEET_ID) return alert('กรุณาลงชื่อเข้าใช้ Google ก่อนครับ');
+        let values = [[ document.getElementById('dp_id').value, document.getElementById('dp_name').value, document.getElementById('dp_lat').value, document.getElementById('dp_lng').value ]];
+        try {
+            await gapi.client.sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEET_ID, range: 'Depots!A:D', valueInputOption: 'USER_ENTERED', resource: { values: values }
+            });
+            alert('บันทึกข้อมูลคลังสำเร็จ!');
+            fetchDataFromSheets();
+        } catch(err) { console.error(err); alert('บันทึกไม่สำเร็จ'); }
+    }
+
+    function syncFromOptSelection(type) {
+        if (type === 'depot') {
+            let val = document.getElementById('opt_depot_select').value;
+            document.getElementById('db_depot_list').value = val;
+            loadDepotData();
+        }
+    }
+
+    function clearForm(prefix) {
+        document.getElementById(`${prefix}_id`).value = "";
+        document.getElementById(`${prefix}_name`).value = "";
     }
 
     function updateTruckCap() {
@@ -460,108 +1176,50 @@
         document.getElementById('tr_capacity').value = compArr.reduce((sum, val) => sum + (parseInt(val) || 0), 0);
     }
 
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    function addTruckToFleet() {
+        let plate = document.getElementById('tr_plate').value.trim();
+        let compsRaw = document.getElementById('tr_compartments').value.trim();
+        let compArr = compsRaw.split('/').map(v => parseInt(v.trim()) || 0).filter(v => v > 0);
+        let cap = compArr.reduce((sum, val) => sum + val, 0);
+
+        if (!plate) return alert("กรุณาระบุทะเบียนรถ");
+        if (compArr.length === 0 || cap === 0) return alert("กรุณาระบุขนาดช่องน้ำมันให้ถูกต้อง");
+
+        fleetList.push({ plate: plate, compartments: compArr, capacity: cap });
+        renderFleetTable();
+        alert(`เพิ่มรถทะเบียน ${plate} เข้ากองยานเรียบร้อย`);
     }
 
-    function calculateOptimization() {
-        let dpLat = parseFloat(document.getElementById('dp_lat').value) || 0;
-        let dpLng = parseFloat(document.getElementById('dp_lng').value) || 0;
-        let stLat = parseFloat(document.getElementById('st_lat').value) || 0;
-        let stLng = parseFloat(document.getElementById('st_lng').value) || 0;
+    function removeTruckFromFleet(index) {
+        if (fleetList.length <= 1) return alert("ต้องมีรถอย่างน้อย 1 คันในกองยาน");
+        fleetList.splice(index, 1);
+        renderFleetTable();
+    }
 
-        let distOneWay = calculateDistance(dpLat, dpLng, stLat, stLng);
-        document.getElementById('res_route').innerText = `${document.getElementById('dp_name').value || 'คลัง'} ➔ ${document.getElementById('st_name').value || 'ปั๊ม'} ➔ กลับคลัง`;
-        document.getElementById('res_distance').innerText = (distOneWay * 2).toFixed(2);
+    function renderFleetTable() {
+        let tbody = document.getElementById('fleet_table_body');
+        tbody.innerHTML = "";
+        let totalFleetCap = 0;
 
-        let target_percent = parseInt(document.getElementById('st_target_percent').value) / 100;
-        let truckCapacity = parseInt(document.getElementById('tr_capacity').value);
-        let truckComps = document.getElementById('tr_compartments').value.split('/').map(Number);
-        
-        let tableBody = "", totalNeeded = 0, allTargetsMet = true, availableTruckComps = [...truckComps];
-
-        // ตัวแปรสำหรับสมการ MathJax ของถังที่ 1
-        let firstMaxCap = 0, firstCurrVol = 0, firstTargetVol = 0, firstNeed = 0;
-
-        document.querySelectorAll('.comp-item').forEach((item, index) => {
-            let type = item.querySelector('.c_type').value || "ไม่ระบุ";
-            let maxCap = parseInt(item.querySelector('.c_max').value) || 0;
-            let currVol = parseInt(item.querySelector('.c_curr').value) || 0;
-            let targetVol = maxCap * target_percent;
-            let needToFill = Math.max(0, targetVol - currVol);
-            totalNeeded += needToFill;
-
-            if (index === 0) {
-                firstMaxCap = maxCap;
-                firstCurrVol = currVol;
-                firstTargetVol = targetVol;
-                firstNeed = needToFill;
-            }
-
-            let allocatedText = "";
-            let remainingNeed = needToFill;
-            
-            if (needToFill > 0) {
-                for (let i = 0; i < availableTruckComps.length; i++) {
-                    if (availableTruckComps[i] > 0 && remainingNeed > 0) {
-                        let loadAmount = Math.min(availableTruckComps[i], remainingNeed);
-                        allocatedText += `ช่องที่ ${i+1} (${loadAmount}L)<br>`;
-                        availableTruckComps[i] -= loadAmount;
-                        remainingNeed -= loadAmount;
-                    }
-                }
-                if (remainingNeed > 0) { allocatedText += `<span style="color:red; font-size:12px;">* ขาดอีก ${remainingNeed}L</span>`; allTargetsMet = false; }
-            } else { allocatedText = `<span style="color:#777;">น้ำมันพออยู่แล้ว ไม่ต้องส่ง</span>`; }
-
-            tableBody += `<tr>
-                <td><strong>ถัง ${index+1} (${type})</strong><br><span style="font-size:12px; color:#777;">ความจุ: ${maxCap}L | ปัจจุบัน: ${currVol}L</span></td>
-                <td>${target_percent * 100}% <br><span style="font-size:12px; color:#777;">(เป้า: ${targetVol}L)</span></td>
-                <td><strong style="color:#2e7d32;">${needToFill}</strong></td>
-                <td>${allocatedText}</td>
-            </tr>`;
+        fleetList.forEach((t, i) => {
+            totalFleetCap += t.capacity;
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${i + 1}</strong></td>
+                    <td><strong>${t.plate}</strong></td>
+                    <td><span style="font-family:monospace; color:#475569;">${t.compartments.join(' / ')} L</span></td>
+                    <td><strong style="color:#0369a1;">${t.capacity.toLocaleString()} L</strong></td>
+                    <td style="text-align:center;">
+                        <button type="button" class="btn-remove-stop" style="width:28px; height:28px; font-size:12px;" onclick="removeTruckFromFleet(${i})">✕</button>
+                    </td>
+                </tr>
+            `;
         });
 
-        document.getElementById('res_table_body').innerHTML = tableBody;
-        let statusEl = document.getElementById('res_status');
-        if (totalNeeded === 0) statusEl.innerHTML = `<span class="badge badge-warning">ระดับน้ำมันถึงเป้าแล้ว ไม่ต้องวิ่งรถ</span>`;
-        else if (allTargetsMet && totalNeeded <= truckCapacity) statusEl.innerHTML = `<span class="badge badge-success">✅ สามารถจัดส่งได้ตามเป้าหมาย (ใช้รถ 1 คัน)</span>`;
-        else statusEl.innerHTML = `<span class="badge badge-danger">⚠️ ความจุรถไม่พอ! ไม่สามารถเติมได้ถึงเป้าหมาย %</span>`;
-        
-        document.getElementById('dashboard_result').style.display = 'block';
-
-        // 🟢 ส่วนที่เพิ่ม: อัปเดตสมการ MathJax ให้โชว์ตัวเลขที่คำนวณได้
-        let advBox = document.getElementById('advanced_info');
-        advBox.innerHTML = `
-            <h4 style="margin-top:0; color: #1e293b;">📐 สูตรและตัวแปรที่ใช้ (IRP Mathematical Model)</h4>
-            <strong>1. การหาระยะทาง (Haversine Formula)</strong><br>
-            ระบบคำนวณระยะทางบนพื้นผิวโลกโค้งจาก ละติจูด/ลองจิจูด:<br>
-            \\( R = 6371 \\) (รัศมีโลก กม.)<br>
-            \\( \\Delta Lat = (${stLat} - ${dpLat}) \\times \\frac{\\pi}{180} \\)<br>
-            \\( \\Delta Lng = (${stLng} - ${dpLng}) \\times \\frac{\\pi}{180} \\)<br>
-            \\( a = \\sin^2\\left(\\frac{\\Delta Lat}{2}\\right) + \\cos(${dpLat}) \\cdot \\cos(${stLat}) \\cdot \\sin^2\\left(\\frac{\\Delta Lng}{2}\\right) \\)<br>
-            \\( Distance = 2 \\cdot 6371 \\cdot \\text{atan2}\\left(\\sqrt{a}, \\sqrt{1-a}\\right) = \\mathbf{${distOneWay.toFixed(2)} \\text{ กม.}} \\)<br><br>
-
-            <strong>2. เป้าหมายระดับน้ำมัน (Inventory Constraint - ถังที่ 1)</strong><br>
-            \\( Target\\_Vol = ${firstMaxCap} \\times ${target_percent} = \\mathbf{${firstTargetVol.toFixed(2)} \\text{ L}} \\)<br>
-            \\( Need\\_To\\_Fill = \\max(0, ${firstTargetVol.toFixed(2)} - ${firstCurrVol}) = \\mathbf{${firstNeed.toFixed(2)} \\text{ L}} \\)<br><br>
-
-            <strong>3. อัลกอริทึมจัดสรรรถบรรทุก (Heuristic Compartment Allocation)</strong><br>
-            จัดสรรน้ำมันลงช่องว่างในรถบรรทุก (Truck Compartments) ทีละช่อง:<br>
-            \\( Remaining\\_Need = Need\\_To\\_Fill \\)<br>
-            \\( \\text{For each } Compartment_i: \\)<br>
-            &nbsp;&nbsp;\\( Load = \\min(Compartment_i, Remaining\\_Need) \\)<br>
-            &nbsp;&nbsp;\\( Compartment_i = Compartment_i - Load \\)<br>
-            &nbsp;&nbsp;\\( Remaining\\_Need = Remaining\\_Need - Load \\)
-        `;
-
-        if (window.MathJax) {
-            MathJax.typesetPromise([advBox]);
-        }
+        document.getElementById('fleet_count').innerText = fleetList.length;
+        document.getElementById('fleet_total_cap').innerText = totalFleetCap.toLocaleString();
     }
 
-    // ฟังก์ชันซ่อน/แสดงกล่อง Advanced
     function toggleAdvancedInfo() {
         let advBox = document.getElementById('advanced_info');
         if (advBox.style.display === 'none') {
@@ -574,7 +1232,9 @@
         }
     }
 
-    window.onload = function() { initMapStation(); };
+    window.onload = function() { 
+        renderFleetTable();
+    };
 </script>
 </body>
 </html>
