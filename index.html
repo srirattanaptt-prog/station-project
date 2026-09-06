@@ -46,7 +46,7 @@
         .plan-header-row { margin: 25px 0 12px 0; }
         .plan-title { margin: 0; font-size: 16px; color: #1e293b; }
 
-        /* แผงควบคุมกลยุทธ์ 3 แถว */
+        /* แผงควบคุมกลยุทธ์ 3 แถว (Triple-Tier Strategy Panel) */
         .strategy-control-box { background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 20px; margin-bottom: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
         .strategy-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #f1f5f9; gap: 15px; flex-wrap: wrap; }
         .strategy-row:last-child { border-bottom: none; }
@@ -141,6 +141,7 @@
         .badge-priority { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
         .badge-outlier { background: #fee2e2; color: #991b1b; border: 1px dashed #ef4444; }
         
+        /* สไตล์กล่องวิธีทำ Linear Optimization ระดับมืออาชีพ */
         .adv-box { margin-top: 15px; padding: 24px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13.5px; line-height: 1.8; color: #1e293b; }
         .calc-step-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 20px; margin: 14px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
         .calc-step-title { font-weight: 600; color: #0369a1; margin-bottom: 8px; font-size: 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; }
@@ -186,7 +187,7 @@
 
     <!-- MAIN TAB 1: Optimization (หน้าแรก) -->
     <div id="tab-result" class="tab-content active">
-        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Sales-Weighted Stock Day & Price Trend Model)</h3>
+        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Dynamic Marginal Strategy Optimization)</h3>
         <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">
             ระบบควบคุมพิกัดน้ำหนัก: <strong>ดีเซลล้วนได้สูงสุด 38,000L</strong> | เบนซิน 4,000L โหลดดีเซลได้ 35,000L | เบนซิน $\ge$ 8,000L โหลดเต็มพิกัด 40,000L พร้อมคัดกรอง Outlier อัตโนมัติ
         </p>
@@ -255,7 +256,7 @@
                 <h4 class="plan-title">📊 แผนการโหลดและจ่ายน้ำมัน (ควบคุมพิกัดน้ำหนักกฎหมายขนส่ง)</h4>
             </div>
 
-            <!-- 🎛️ แผงควบคุมกลยุทธ์ 3 แถว -->
+            <!-- 🎛️ แผงควบคุมกลยุทธ์ 3 แถว (Weighted Stock Day Decision Rules) -->
             <div class="strategy-control-box">
                 <!-- แถวที่ 1: แนวโน้มราคาน้ำมัน (ลง / คงที่ / ขึ้น / ขึ้นชัวร์) -->
                 <div class="strategy-row">
@@ -1160,6 +1161,7 @@
             }
         });
 
+        // ปรับขอบเขตสเกลของแถวที่ 3 (Max Stock Day Slider) ให้ยืดหยุ่นตามถังที่เลือก
         let stockSlider = document.getElementById('scale_stock_days');
         if (stockSlider) {
             let newMax = Math.max(10, Math.ceil(maxSDInCurrentStation + 5));
@@ -1438,7 +1440,7 @@
     }
 
     // =========================================================================
-    // ⚙️ อัลกอริทึม Sales-Weighted Stock Day & Dynamic Trend Dispatching
+    // ⚙️ อัลกอริทึม Smart Predictive Dispatching & Price Trend Optimization
     // =========================================================================
     function calculateAxleDensityCompliantOptimization(selectedStops, selectedDepotIndex, targetDays) {
         let depot = depotData[selectedDepotIndex];
@@ -1489,7 +1491,7 @@
         // ดึงสัดส่วนความจุถังเป้าหมายจาก Slider แถว 2 (10% - 100%)
         let targetCapacityRatio = (parseFloat(document.getElementById('scale_tank_capacity').value) || 50) / 100;
 
-        // คำนวณภาพรวมระบบ & Sales-Weighted Stock Day
+        // คำนวณภาพรวมระบบ & Sales-Weighted Stock Day (WSD)
         let tankDemandList = [];
         let outlierTanksCount = 0;
         let totalNetCapacity = 0;
@@ -1550,14 +1552,23 @@
             });
         });
 
-        // ค่าเฉลี่ย Weighted Stock Day เริ่มต้นก่อนการจัดส่ง
+        // 🧠 ค่าเฉลี่ย Weighted Stock Day เริ่มต้นก่อนการจัดส่ง
         let initialWeightedStockDays = totalNetSalesVelocity > 0 ? (totalNetInitialUsable / totalNetSalesVelocity) : 0;
         let aggregateStockPercent = totalNetCapacity > 0 ? ((totalNetInventory / totalNetCapacity) * 100).toFixed(1) : 0;
+
+        let trendStrategyMessage = "";
+        if (currentPriceTrend === 'down') trendStrategyMessage = `📉 <strong>กลยุทธ์ราคาขาลง:</strong> เพิ่มรถต่อเมื่อ ΔWSD > 2.0 วัน เพื่อป้องกันขาดทุนสต็อก`;
+        else if (currentPriceTrend === 'flat') trendStrategyMessage = `➡️ <strong>กลยุทธ์ราคาคงที่:</strong> เพิ่มรถต่อเมื่อ ΔWSD > 1.0 วัน ตามรอบสั่งปกติ`;
+        else if (currentPriceTrend === 'up') trendStrategyMessage = `📈 <strong>กลยุทธ์ราคาขาขึ้น:</strong> เพิ่มรถเมื่อ ΔWSD > 0.5 วัน เพื่อเก็งกำไรส่วนต่าง`;
+        else if (currentPriceTrend === 'sure') trendStrategyMessage = `🚀 <strong>กลยุทธ์ราคาขึ้นชัวร์:</strong> ปล่อยรถทุกคันเท่าที่ถังจะรับได้แบบไม่จำกัด!`;
 
         let calloutBox = document.getElementById('smart_strategy_callout');
         if (calloutBox) {
             calloutBox.innerHTML = `
-                📊 <strong>ตัวชี้วัดสถานะสต็อก:</strong> Weighted Stock Day รวมก่อนเติม = <strong>${initialWeightedStockDays.toFixed(2)} วัน</strong> | ปริมาณสต็อกสุทธิ = <strong>${aggregateStockPercent}%</strong> | ยอดจำหน่ายสุทธิ = <strong>${totalNetSalesVelocity.toLocaleString()} L/วัน</strong>
+                ${trendStrategyMessage}<br>
+                <span style="font-size:12px; color:#1e293b; margin-top:4px; display:inline-block;">
+                    📊 <strong>ตัวชี้วัดสถานะสต็อก:</strong> Weighted Stock Day รวมก่อนเติม = <strong>${initialWeightedStockDays.toFixed(2)} วัน</strong> | ปริมาณสต็อกสุทธิ = <strong>${aggregateStockPercent}%</strong> | ยอดจำหน่ายสุทธิ = <strong>${totalNetSalesVelocity.toLocaleString()} L/วัน</strong>
+                </span>
             `;
             calloutBox.style.display = 'block';
         }
@@ -1575,7 +1586,7 @@
         let firstTruckDieselTotal = 0;
         let firstTruckBenzeneTotal = 0;
 
-        // วนลูปปล่อยรถทีละคันตามกฎถ่วงน้ำหนัก (เงื่อนไข "เพิ่มขึ้นเกินเกณฑ์")
+        // วนลูปปล่อยรถทีละคันตามกฎถ่วงน้ำหนัก (Weighted Stock Day Decision Rules)
         for (let tIdx = 0; tIdx < availableFleet.length; tIdx++) {
             let truck = availableFleet[tIdx];
             let isAdditionalTruck = (tIdx > 0);
@@ -1664,35 +1675,41 @@
                 }
             }
 
-            // คำนวณ Sales-Weighted Stock Day จำลองหลังเพิ่มรถคันนี้
+            // 🧠 คำนวณ Sales-Weighted Stock Day จำลองหลังเพิ่มรถคันนี้
             let simulatedAddedUsableVolume = trialAllocations.reduce((sum, a) => sum + (a.tankItem.isOutlier ? 0 : a.load), 0);
             let simulatedWeightedStockDays = totalNetSalesVelocity > 0 ? ((totalNetInitialUsable + totalDispatched + simulatedAddedUsableVolume) / totalNetSalesVelocity) : 0;
             let currentWeightedStockDays = totalNetSalesVelocity > 0 ? ((totalNetInitialUsable + totalDispatched) / totalNetSalesVelocity) : 0;
             let deltaWeightedStockDays = simulatedWeightedStockDays - currentWeightedStockDays;
 
-            // 🎯 กฎการตัดสินใจเพิ่มรถ: เพิ่มขึ้นเกินเกณฑ์จึงอนุญาตให้เพิ่มรถ
+            // 🎯 กฎการตัดสินใจเพิ่มรถ: ค่าเฉลี่ย Weighted Stock Day ต้องเพิ่มขึ้น "เกิน" เกณฑ์
             let allowAdditionalTruck = true;
             if (isAdditionalTruck) {
                 if (currentPriceTrend === 'down') {
-                    // ลง: ค่าเฉลี่ย weighted stock day เพิ่มขึ้นเกิน 2 วัน ให้เพิ่มรถ
+                    // ลง: เพิ่มรถต่อเมื่อ ΔWSD > 2.0 วัน
                     if (deltaWeightedStockDays <= 2.0) {
                         allowAdditionalTruck = false;
-                        weightComplianceNotes.push(`📉 [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (Weighted Stock Day เพิ่มขึ้น ${deltaWeightedStockDays.toFixed(2)} วัน ไม่เกิน 2.0 วัน)`);
+                        weightComplianceNotes.push(`📉 [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (ΔWSD = ${deltaWeightedStockDays.toFixed(2)} วัน ไม่ผ่านเกณฑ์ > 2.0 วัน)`);
+                    } else {
+                        weightComplianceNotes.push(`📉 [คันที่ ${tIdx+1} ${truck.plate}]: อนุมัติ (ΔWSD = ${deltaWeightedStockDays.toFixed(2)} วัน ผ่านเกณฑ์ > 2.0 วัน)`);
                     }
                 } else if (currentPriceTrend === 'flat') {
-                    // คงที่: ค่าเฉลี่ย weighted stock day เพิ่มขึ้นเกิน 1 วัน ให้เพิ่มรถ
+                    // คงที่: เพิ่มรถต่อเมื่อ ΔWSD > 1.0 วัน
                     if (deltaWeightedStockDays <= 1.0) {
                         allowAdditionalTruck = false;
-                        weightComplianceNotes.push(`➡️ [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (Weighted Stock Day เพิ่มขึ้น ${deltaWeightedStockDays.toFixed(2)} วัน ไม่เกิน 1.0 วัน)`);
+                        weightComplianceNotes.push(`➡️ [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (ΔWSD = ${deltaWeightedStockDays.toFixed(2)} วัน ไม่ผ่านเกณฑ์ > 1.0 วัน)`);
+                    } else {
+                        weightComplianceNotes.push(`➡️ [คันที่ ${tIdx+1} ${truck.plate}]: อนุมัติ (ΔWSD = ${deltaWeightedStockDays.toFixed(2)} วัน ผ่านเกณฑ์ > 1.0 วัน)`);
                     }
                 } else if (currentPriceTrend === 'up') {
-                    // ขึ้น: ค่าเฉลี่ย weighted stock day เพิ่มขึ้นเกิน 0.5 วัน ให้เพิ่มรถ
+                    // ขึ้น: เพิ่มรถต่อเมื่อ ΔWSD > 0.5 วัน
                     if (deltaWeightedStockDays <= 0.5) {
                         allowAdditionalTruck = false;
-                        weightComplianceNotes.push(`📈 [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (Weighted Stock Day เพิ่มขึ้น ${deltaWeightedStockDays.toFixed(2)} วัน ไม่เกิน 0.5 วัน)`);
+                        weightComplianceNotes.push(`📈 [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (ΔWSD = ${deltaWeightedStockDays.toFixed(2)} วัน ไม่ผ่านเกณฑ์ > 0.5 วัน)`);
+                    } else {
+                        weightComplianceNotes.push(`📈 [คันที่ ${tIdx+1} ${truck.plate}]: อนุมัติ (ΔWSD = ${deltaWeightedStockDays.toFixed(2)} วัน ผ่านเกณฑ์ > 0.5 วัน)`);
                     }
                 } else if (currentPriceTrend === 'sure') {
-                    // ขึ้นชัวร์: ให้เพิ่มรถทุกคันเท่าที่ปริมาณความจุถังใต้ดินจะรับได้
+                    // ขึ้นชัวร์: ปล่อยทุกคันที่ความจุถังรับไหว
                     allowAdditionalTruck = true;
                 }
             }
@@ -1767,7 +1784,7 @@
         if (totalDispatched === 0) {
             statusEl.innerHTML = `<span class="badge badge-warning">ระดับน้ำมันทุกถังพอสำหรับเกณฑ์ความปลอดภัยแล้ว ไม่จำเป็นต้องปล่อยรถ</span>` + noteText;
         } else {
-            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดสรรสำเร็จตามเกณฑ์ถ่วงน้ำหนัก: โหลดรวม ${totalDispatched.toLocaleString()} ลิตร (ปล่อยรถ ${usedCount} คัน: ${deployedTrucks.map(t=>t.plate).join(', ')})</span>` + noteText;
+            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดสรรสำเร็จตามเกณฑ์ถ่วงน้ำหนัก (WSD): โหลดรวม ${totalDispatched.toLocaleString()} ลิตร (ปล่อยรถ ${usedCount} คัน: ${deployedTrucks.map(t=>t.plate).join(', ')})</span>` + noteText;
         }
         
         document.getElementById('dashboard_result').style.display = 'block';
@@ -1956,7 +1973,7 @@
                         </tr>
                         <tr>
                             <td>\\( \\theta_{\\text{trend}} \\)</td>
-                            <td class="desc"><strong>เกณฑ์เพดานการเพิ่มขึ้นของสต็อก</strong> อิงตามแนวโน้มราคาน้ำมัน (ลง 2.0 / คงที่ 1.0 / ขึ้น 0.5 วัน)</td>
+                            <td class="desc"><strong>เกณฑ์เพดานการเพิ่มขึ้นของสต็อก</strong> อิงตามแนวโน้มราคาน้ำมัน (ลง > 2.0 / คงที่ > 1.0 / ขึ้น > 0.5 วัน)</td>
                             <td class="unit">วัน</td>
                         </tr>
                         <tr>
