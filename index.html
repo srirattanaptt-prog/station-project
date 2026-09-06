@@ -1629,6 +1629,7 @@
                 }
             });
 
+            // ตรวจสอบ Axle-Load Constraint
             let weightViolation = false;
             let allowedMaxDiesel = 40000;
 
@@ -1714,8 +1715,20 @@
             }
         }
 
-        // อัปเดตกล่องแสดงผลสรุป พร้อมแสดงสมการและการทดสอบเงื่อนไขปล่อยรถคันเสริม (Final Marginal Dispatch Condition)
+        let usedCount = deployedTrucks.length;
         let isDispatchConditionMet = calculatedDeltaWSD > parseFloat(thetaReq);
+        
+        // กำหนดข้อความผลลัพธ์การตัดสินใจระบุจำนวนคันอย่างชัดเจน
+        let approvalDecisionText = "";
+        if (usedCount > 0 && isDispatchConditionMet) {
+            approvalDecisionText = `\\text{ผ่านเกณฑ์ (อนุมัติการออกรถ } \\mathbf{${usedCount}} \\text{ คัน)}`;
+        } else if (usedCount > 0) {
+            approvalDecisionText = `\\text{อนุมัติการออกรถ } \\mathbf{${usedCount}} \\text{ คัน (ตามความจำเป็นพื้นฐาน)}`;
+        } else {
+            approvalDecisionText = `\\text{ไม่ผ่านเกณฑ์ (ระงับการเพิ่มรถ / สต็อกเพียงพอ)}`;
+        }
+
+        // อัปเดตกล่องแสดงผลสรุป พร้อมแสดงสมการและการทดสอบเงื่อนไขปล่อยรถคันเสริมระบุจำนวนคัน
         let calloutBox = document.getElementById('smart_strategy_callout');
         if (calloutBox) {
             calloutBox.innerHTML = `
@@ -1727,7 +1740,7 @@
                     $$\\Theta_{\\text{req}} = \\mathcal{K}_{\\text{trend}} \\times \\mathcal{U}_{\\text{risk}} \\times \\mathcal{F}_{\\text{cap}} = ${kTrendValue.toFixed(1)} \\times \\left(\\frac{${initialWeightedStockDays.toFixed(2)}}{${targetDays.toFixed(1)}}\\right) \\times \\left(\\frac{100\\%}{${(targetCapacityRatio*100).toFixed(0)}\\%}\\right) = ${kTrendValue.toFixed(1)} \\times ${uRiskValue.toFixed(2)} \\times ${fCapValue.toFixed(2)} = \\mathbf{${thetaReq} \\text{ วัน}}$$
                 </span><br>
                 <span style="font-size:12.5px; color:#4338ca; font-weight:600; margin-top:2px; display:inline-block;">
-                    $$\\Delta WSD = WSD_{\\text{post}} - WSD_{\\text{pre}} = ${calculatedDeltaWSD.toFixed(2)} \\text{ วัน} > \\Theta_{\\text{req}} \\, (${thetaReq} \\text{ วัน}) \\implies \\mathbf{${isDispatchConditionMet ? 'ผ่านเกณฑ์ (อนุมัติการเพิ่มรถ)' : 'ไม่ผ่านเกณฑ์ (ระงับการเพิ่มรถ)'}}$$
+                    $$\\Delta WSD = WSD_{\\text{post}} - WSD_{\\text{pre}} = ${calculatedDeltaWSD.toFixed(2)} \\text{ วัน} > \\Theta_{\\text{req}} \\, (${thetaReq} \\text{ วัน}) \\implies \\mathbf{${approvalDecisionText}}$$
                 </span>
             `;
             calloutBox.style.display = 'block';
@@ -1779,7 +1792,6 @@
         document.getElementById('res_table_body').innerHTML = tableBody;
 
         let statusEl = document.getElementById('res_status');
-        let usedCount = deployedTrucks.length;
         let noteText = weightComplianceNotes.length > 0 ? `<br><span style="font-size:12px; color:#0369a1;">${weightComplianceNotes.join(' | ')}</span>` : "";
 
         if (totalDispatched === 0) {
@@ -1890,7 +1902,7 @@
 
                 <strong>การทดสอบเงื่อนไขปล่อยรถคันเสริม (Final Marginal Dispatch Condition):</strong><br>
                 $$\\Delta WSD = WSD_{\\text{post}} - WSD_{\\text{pre}} = \\mathbf{${calculatedDeltaWSD.toFixed(2)} \\text{ วัน}}$$
-                $$\\text{ตรวจสอบ: } \\Delta WSD \\, (${calculatedDeltaWSD.toFixed(2)}) > \\Theta_{\\text{req}} \\, (${thetaReq}) \\implies \\mathbf{${calculatedDeltaWSD > parseFloat(thetaReq) ? 'ผ่านเกณฑ์ (อนุมัติเพิ่มรถ)' : 'ไม่ผ่านเกณฑ์ (ระงับการเพิ่มรถ)'}}$$
+                $$\\text{ตรวจสอบ: } \\Delta WSD \\, (${calculatedDeltaWSD.toFixed(2)}) > \\Theta_{\\text{req}} \\, (${thetaReq}) \\implies \\mathbf{${approvalDecisionText}}$$
             </div>
 
             <!-- 3. ฟังก์ชันเป้าหมายของระบบ -->
