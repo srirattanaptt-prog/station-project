@@ -288,7 +288,7 @@
                 </div>
             </div>
 
-            <!-- กล่องแสดงข้อเสนอแนะเชิงกลยุทธ์ตาม Weighted Stock Day และการตัด Outlier -->
+            <!-- กล่องแสดงข้อเสนอแนะเชิงกลยุทธ์ตาม Weighted Stock Day และสมการแทนค่าตัวแปรในแถวล่างสุด -->
             <div id="smart_strategy_callout" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px 16px; margin-bottom:15px; font-size:13px; color:#166534; display:none;"></div>
 
             <table class="result-table">
@@ -1436,7 +1436,7 @@
     }
 
     // =========================================================================
-    // ⚙️ อัลกอริทึม Sales-Weighted Stock Day & Dynamic Threshold Formulation
+    // ⚙️ อัลกอริทึม Sales-Weighted Stock Day & Dynamic Trend Dispatching
     // =========================================================================
     function calculateAxleDensityCompliantOptimization(selectedStops, selectedDepotIndex, targetDays) {
         let depot = depotData[selectedDepotIndex];
@@ -1484,10 +1484,8 @@
             }
         }
 
-        // ดึงสัดส่วนความจุถังเป้าหมายจาก Slider แถว 2 (10% - 100%)
         let targetCapacityRatio = (parseFloat(document.getElementById('scale_tank_capacity').value) || 50) / 100;
 
-        // คำนวณภาพรวมระบบ & Sales-Weighted Stock Day (WSD)
         let tankDemandList = [];
         let outlierTanksCount = 0;
         let totalNetCapacity = 0;
@@ -1504,7 +1502,6 @@
                 let usableStock = Math.max(0, currVol - deadStock);
                 let currentStockDays = sales > 0 ? (usableStock / sales) : 99;
 
-                // ตรวจจับ Outlier
                 let isOutlier = (currentStockDays >= 15.0) || (sales < 300 && (currVol / maxCap) > 0.60);
 
                 if (isOutlier) {
@@ -1548,11 +1545,9 @@
             });
         });
 
-        // ค่าเฉลี่ย Weighted Stock Day เริ่มต้นก่อนการจัดส่ง
         let initialWeightedStockDays = totalNetSalesVelocity > 0 ? (totalNetInitialUsable / totalNetSalesVelocity) : 0;
         let aggregateStockPercent = totalNetCapacity > 0 ? ((totalNetInventory / totalNetCapacity) * 100).toFixed(1) : 0;
 
-        // 🧠 คำนวณสมการสถาปัตยกรรมเชิงพลวัต: Dynamic Threshold Engine
         let kTrendValue = (currentPriceTrend === 'down') ? 2.0 : ((currentPriceTrend === 'flat') ? 1.0 : ((currentPriceTrend === 'up') ? 0.5 : 0.0));
         let uRiskValue = targetDays > 0 ? (initialWeightedStockDays / targetDays) : 1.0;
         let fCapValue = targetCapacityRatio > 0 ? (1.0 / targetCapacityRatio) : 1.0;
@@ -1564,18 +1559,24 @@
         else if (currentPriceTrend === 'up') trendStrategyMessage = `📈 <strong>กลยุทธ์ราคาขาขึ้น:</strong> เพิ่มรถเมื่อ ΔWSD > 0.5 วัน เพื่อเก็งกำไรส่วนต่าง`;
         else if (currentPriceTrend === 'sure') trendStrategyMessage = `🚀 <strong>กลยุทธ์ราคาขึ้นชัวร์:</strong> ปล่อยรถทุกคันเท่าที่ถังจะรับได้แบบไม่จำกัด!`;
 
+        // 🧠 อัปเดตกล่องแสดงผลสรุป พร้อมแสดงสมการและแทนค่าตัวเลขจริงในแถวล่างสุด
         let calloutBox = document.getElementById('smart_strategy_callout');
         if (calloutBox) {
             calloutBox.innerHTML = `
                 ${trendStrategyMessage}<br>
-                <span style="font-size:12px; color:#1e293b; margin-top:4px; display:inline-block;">
+                <span style="font-size:12.5px; color:#1e293b; margin-top:4px; display:inline-block;">
                     📊 <strong>ตัวชี้วัดสถานะสต็อก:</strong> Weighted Stock Day รวมก่อนเติม = <strong>${initialWeightedStockDays.toFixed(2)} วัน</strong> | ปริมาณสต็อกสุทธิ = <strong>${aggregateStockPercent}%</strong> | สัมประสิทธิ์เกณฑ์พลวัต (\\(\\Theta_{\\text{req}}\\)) = <strong>${thetaReq} วัน</strong>
+                </span><br>
+                <span style="font-size:12.5px; color:#0369a1; font-weight:600; margin-top:4px; display:inline-block;">
+                    $$\\Theta_{\\text{req}} = \\mathcal{K}_{\\text{trend}} \\times \\mathcal{U}_{\\text{risk}} \\times \\mathcal{F}_{\\text{cap}} = ${kTrendValue.toFixed(1)} \\times \\left(\\frac{${initialWeightedStockDays.toFixed(2)}}{${targetDays.toFixed(1)}}\\right) \\times \\left(\\frac{100\\%}{${(targetCapacityRatio*100).toFixed(0)}\\%}\\right) = ${kTrendValue.toFixed(1)} \\times ${uRiskValue.toFixed(2)} \\times ${fCapValue.toFixed(2)} = \\mathbf{${thetaReq} \\text{ วัน}}$$
                 </span>
             `;
             calloutBox.style.display = 'block';
+            if (window.MathJax) {
+                MathJax.typesetPromise([calloutBox]);
+            }
         }
 
-        // จัดเรียง Priority: ถังปกติยอดขายสูงสุดมาก่อน
         tankDemandList.sort((a, b) => {
             if (a.isOutlier !== b.isOutlier) return a.isOutlier ? 1 : -1;
             if (b.sales !== a.sales) return b.sales - a.sales;
@@ -1589,7 +1590,6 @@
         let firstTruckBenzeneTotal = 0;
         let calculatedDeltaWSD = 0;
 
-        // วนลูปปล่อยรถทีละคันตามกฎถ่วงน้ำหนัก (เงื่อนไข "เพิ่มขึ้นเกินเกณฑ์")
         for (let tIdx = 0; tIdx < availableFleet.length; tIdx++) {
             let truck = availableFleet[tIdx];
             let isAdditionalTruck = (tIdx > 0);
@@ -1646,7 +1646,6 @@
                 }
             });
 
-            // ตรวจสอบ Axle-Load Constraint
             let weightViolation = false;
             let allowedMaxDiesel = 40000;
 
@@ -1678,14 +1677,12 @@
                 }
             }
 
-            // คำนวณ Sales-Weighted Stock Day จำลองหลังเพิ่มรถคันนี้
             let simulatedAddedUsableVolume = trialAllocations.reduce((sum, a) => sum + (a.tankItem.isOutlier ? 0 : a.load), 0);
             let simulatedWeightedStockDays = totalNetSalesVelocity > 0 ? ((totalNetInitialUsable + totalDispatched + simulatedAddedUsableVolume) / totalNetSalesVelocity) : 0;
             let currentWeightedStockDays = totalNetSalesVelocity > 0 ? ((totalNetInitialUsable + totalDispatched) / totalNetSalesVelocity) : 0;
             let deltaWeightedStockDays = simulatedWeightedStockDays - currentWeightedStockDays;
             calculatedDeltaWSD = deltaWeightedStockDays;
 
-            // 🎯 กฎการตัดสินใจเพิ่มรถ: ค่าเฉลี่ย Weighted Stock Day ต้องเพิ่มขึ้น "เกิน" เกณฑ์
             let allowAdditionalTruck = true;
             if (isAdditionalTruck) {
                 if (currentPriceTrend === 'down') {
@@ -1734,7 +1731,6 @@
             }
         }
 
-        // สร้างตารางผลลัพธ์
         let tableBody = "";
         tankDemandList.forEach((item, index) => {
             let postVol = item.currVol + item.tankLoad;
