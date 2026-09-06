@@ -875,6 +875,7 @@
         document.getElementById('fleet_total_cap').innerText = totalFleetCap.toLocaleString();
     }
 
+    // Master Data
     function getTankSpecsJSON() {
         let specs = [];
         document.querySelectorAll('#compartments_area .comp-item').forEach(item => {
@@ -1559,24 +1560,6 @@
         else if (currentPriceTrend === 'up') trendStrategyMessage = `📈 <strong>กลยุทธ์ราคาขาขึ้น:</strong> เพิ่มรถเมื่อ ΔWSD > 0.5 วัน เพื่อเก็งกำไรส่วนต่าง`;
         else if (currentPriceTrend === 'sure') trendStrategyMessage = `🚀 <strong>กลยุทธ์ราคาขึ้นชัวร์:</strong> ปล่อยรถทุกคันเท่าที่ถังจะรับได้แบบไม่จำกัด!`;
 
-        // 🧠 อัปเดตกล่องแสดงผลสรุป พร้อมแสดงสมการและแทนค่าตัวเลขจริงในแถวล่างสุด
-        let calloutBox = document.getElementById('smart_strategy_callout');
-        if (calloutBox) {
-            calloutBox.innerHTML = `
-                ${trendStrategyMessage}<br>
-                <span style="font-size:12.5px; color:#1e293b; margin-top:4px; display:inline-block;">
-                    📊 <strong>ตัวชี้วัดสถานะสต็อก:</strong> Weighted Stock Day รวมก่อนเติม = <strong>${initialWeightedStockDays.toFixed(2)} วัน</strong> | ปริมาณสต็อกสุทธิ = <strong>${aggregateStockPercent}%</strong> | สัมประสิทธิ์เกณฑ์พลวัต (\\(\\Theta_{\\text{req}}\\)) = <strong>${thetaReq} วัน</strong>
-                </span><br>
-                <span style="font-size:12.5px; color:#0369a1; font-weight:600; margin-top:4px; display:inline-block;">
-                    $$\\Theta_{\\text{req}} = \\mathcal{K}_{\\text{trend}} \\times \\mathcal{U}_{\\text{risk}} \\times \\mathcal{F}_{\\text{cap}} = ${kTrendValue.toFixed(1)} \\times \\left(\\frac{${initialWeightedStockDays.toFixed(2)}}{${targetDays.toFixed(1)}}\\right) \\times \\left(\\frac{100\\%}{${(targetCapacityRatio*100).toFixed(0)}\\%}\\right) = ${kTrendValue.toFixed(1)} \\times ${uRiskValue.toFixed(2)} \\times ${fCapValue.toFixed(2)} = \\mathbf{${thetaReq} \\text{ วัน}}$$
-                </span>
-            `;
-            calloutBox.style.display = 'block';
-            if (window.MathJax) {
-                MathJax.typesetPromise([calloutBox]);
-            }
-        }
-
         tankDemandList.sort((a, b) => {
             if (a.isOutlier !== b.isOutlier) return a.isOutlier ? 1 : -1;
             if (b.sales !== a.sales) return b.sales - a.sales;
@@ -1731,6 +1714,28 @@
             }
         }
 
+        // อัปเดตกล่องแสดงผลสรุป พร้อมแสดงสมการและการทดสอบเงื่อนไขปล่อยรถคันเสริม (Final Marginal Dispatch Condition)
+        let isDispatchConditionMet = calculatedDeltaWSD > parseFloat(thetaReq);
+        let calloutBox = document.getElementById('smart_strategy_callout');
+        if (calloutBox) {
+            calloutBox.innerHTML = `
+                ${trendStrategyMessage}<br>
+                <span style="font-size:12.5px; color:#1e293b; margin-top:4px; display:inline-block;">
+                    📊 <strong>ตัวชี้วัดสถานะสต็อก:</strong> Weighted Stock Day รวมก่อนเติม = <strong>${initialWeightedStockDays.toFixed(2)} วัน</strong> | ปริมาณสต็อกสุทธิ = <strong>${aggregateStockPercent}%</strong> | สัมประสิทธิ์เกณฑ์พลวัต (\\(\\Theta_{\\text{req}}\\)) = <strong>${thetaReq} วัน</strong>
+                </span><br>
+                <span style="font-size:12.5px; color:#0369a1; font-weight:600; margin-top:4px; display:inline-block;">
+                    $$\\Theta_{\\text{req}} = \\mathcal{K}_{\\text{trend}} \\times \\mathcal{U}_{\\text{risk}} \\times \\mathcal{F}_{\\text{cap}} = ${kTrendValue.toFixed(1)} \\times \\left(\\frac{${initialWeightedStockDays.toFixed(2)}}{${targetDays.toFixed(1)}}\\right) \\times \\left(\\frac{100\\%}{${(targetCapacityRatio*100).toFixed(0)}\\%}\\right) = ${kTrendValue.toFixed(1)} \\times ${uRiskValue.toFixed(2)} \\times ${fCapValue.toFixed(2)} = \\mathbf{${thetaReq} \\text{ วัน}}$$
+                </span><br>
+                <span style="font-size:12.5px; color:#4338ca; font-weight:600; margin-top:2px; display:inline-block;">
+                    $$\\Delta WSD = WSD_{\\text{post}} - WSD_{\\text{pre}} = ${calculatedDeltaWSD.toFixed(2)} \\text{ วัน} > \\Theta_{\\text{req}} \\, (${thetaReq} \\text{ วัน}) \\implies \\mathbf{${isDispatchConditionMet ? 'ผ่านเกณฑ์ (อนุมัติการเพิ่มรถ)' : 'ไม่ผ่านเกณฑ์ (ระงับการเพิ่มรถ)'}}$$
+                </span>
+            `;
+            calloutBox.style.display = 'block';
+            if (window.MathJax) {
+                MathJax.typesetPromise([calloutBox]);
+            }
+        }
+
         let tableBody = "";
         tankDemandList.forEach((item, index) => {
             let postVol = item.currVol + item.tankLoad;
@@ -1867,7 +1872,7 @@
                 </div>
             </div>
 
-            <!-- 2. 🧠 สถาปัตยกรรมการคำนวณเชิงพลวัต (Mathematical Formulation & Dynamic Threshold Engine) -->
+            <!-- 2. สถาปัตยกรรมการคำนวณเชิงพลวัต (Mathematical Formulation & Dynamic Threshold Engine) -->
             <div class="calc-step-card" style="border-left: 4px solid #0284c7;">
                 <div class="calc-step-title">
                     <span>🧠 สถาปัตยกรรมการคำนวณเกณฑ์ปล่อยรถเชิงพลวัต (Dynamic Dispatch Threshold Model - DDTM)</span>
