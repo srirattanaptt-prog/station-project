@@ -42,16 +42,18 @@
         .delivery-sequence-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .delivery-sequence-label { font-size: 14px; font-weight: 600; color: #334155; margin: 0; }
 
-        /* Section Header with Price Trend Toggle */
+        /* Section Header with Price Trend Toggle (5 ระดับ) */
         .plan-header-row { display: flex; justify-content: space-between; align-items: center; margin: 25px 0 12px 0; flex-wrap: wrap; gap: 10px; }
         .plan-title { margin: 0; font-size: 16px; color: #1e293b; }
         
-        .trend-toggle-group { display: inline-flex; background: #e2e8f0; padding: 3px; border-radius: 20px; gap: 2px; }
-        .trend-btn { border: none; background: transparent; padding: 5px 12px; font-family: 'Prompt'; font-size: 12px; font-weight: 500; color: #475569; border-radius: 16px; cursor: pointer; transition: 0.2s; }
+        .trend-toggle-group { display: inline-flex; background: #e2e8f0; padding: 3px; border-radius: 20px; gap: 2px; flex-wrap: wrap; }
+        .trend-btn { border: none; background: transparent; padding: 5px 11px; font-family: 'Prompt'; font-size: 12px; font-weight: 500; color: #475569; border-radius: 16px; cursor: pointer; transition: 0.2s; }
         .trend-btn.active { background: #ffffff; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .trend-btn.safe.active { color: #d97706; background: #fef3c7; }
         .trend-btn.down.active { color: #dc2626; background: #fee2e2; }
         .trend-btn.flat.active { color: #0284c7; background: #e0f2fe; }
         .trend-btn.up.active { color: #16a34a; background: #dcfce7; }
+        .trend-btn.full.active { color: #7c3aed; background: #ede9fe; }
 
         /* Custom Multi-Truck Selection Panel */
         .custom-truck-panel { background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 15px; margin-top: 15px; display: none; }
@@ -240,21 +242,23 @@
                 <p style="margin:5px 0;"><strong>สถานะ Constraint & พิกัดน้ำหนัก:</strong> <span id="res_status"></span></p>
             </div>
             
-            <!-- แถวหัวข้อแผนการโหลดและจ่ายน้ำมัน พร้อมปุ่มกดเลือกแนวโน้มราคาน้ำมัน (ลง / คงที่ / ขึ้น) อยู่แถวเดียวกัน -->
+            <!-- แถวหัวข้อแผนการโหลดและจ่ายน้ำมัน พร้อมปุ่มกดเลือกแนวโน้มราคาน้ำมัน (5 ระดับ) อยู่แถวเดียวกัน -->
             <div class="plan-header-row">
                 <h4 class="plan-title">📊 แผนการโหลดและจ่ายน้ำมัน (ควบคุมพิกัดน้ำหนักกฎหมายขนส่ง)</h4>
                 
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-size:13px; font-weight:500; color:#64748b;">แนวโน้มราคาน้ำมัน:</span>
                     <div class="trend-toggle-group">
-                        <button type="button" class="trend-btn down" onclick="setPriceTrend('down')">📉 ลง</button>
-                        <button type="button" class="trend-btn flat active" onclick="setPriceTrend('flat')">➡️ คงที่</button>
-                        <button type="button" class="trend-btn up" onclick="setPriceTrend('up')">📈 ขึ้น</button>
+                        <button type="button" class="trend-btn safe" onclick="setPriceTrend('safe')">🛡️ พอขาย (25%)</button>
+                        <button type="button" class="trend-btn down" onclick="setPriceTrend('down')">📉 ลง (50%)</button>
+                        <button type="button" class="trend-btn flat active" onclick="setPriceTrend('flat')">➡️ คงที่ (75%)</button>
+                        <button type="button" class="trend-btn up" onclick="setPriceTrend('up')">📈 ขึ้น (90%)</button>
+                        <button type="button" class="trend-btn full" onclick="setPriceTrend('full')">⛽ เต็มถัง (100%)</button>
                     </div>
                 </div>
             </div>
 
-            <!-- กล่องแสดงข้อเสนอแนะเชิงกลยุทธ์ตามแนวโน้มราคาและความคุ้มค่า -->
+            <!-- กล่องแสดงข้อเสนอแนะเชิงกลยุทธ์ตามแนวโน้มราคาและความจุถัง -->
             <div id="smart_strategy_callout" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px 16px; margin-bottom:15px; font-size:13px; color:#166534; display:none;"></div>
 
             <table class="result-table">
@@ -430,7 +434,7 @@
     let mapStation, mapDepot, markerStation, markerDepot;
     let mapStationInitialized = false, mapDepotInitialized = false, compCount = 1;
 
-    // สถานะแนวโน้มราคาน้ำมัน: 'flat' (คงที่), 'down' (ขาลง), 'up' (ขาขึ้น)
+    // สถานะแนวโน้มราคาน้ำมัน: 'safe' (25%), 'down' (50%), 'flat' (75%), 'up' (90%), 'full' (100%)
     let currentPriceTrend = 'flat';
 
     let fleetList = [
@@ -447,14 +451,13 @@
         return name.includes("G95") || name.includes("G91") || name.includes("E20") || name.includes("E85") || name.includes("ULG") || name.includes("BENZENE") || name.includes("เบนซิน") || name.includes("แก๊สโซฮอล์");
     }
 
-    // ฟังก์ชันสลับปุ่มเลือกแนวโน้มราคาน้ำมัน
+    // ฟังก์ชันสลับปุ่มเลือกแนวโน้มราคาน้ำมัน (5 ระดับ)
     function setPriceTrend(trend) {
         currentPriceTrend = trend;
         document.querySelectorAll('.trend-btn').forEach(b => b.classList.remove('active'));
         let targetBtn = document.querySelector(`.trend-btn.${trend}`);
         if (targetBtn) targetBtn.classList.add('active');
 
-        // รันประมวลผลคำนวณใหม่โดยอัตโนมัติตามแนวโน้มราคาที่เลือก
         let dpVal = document.getElementById('opt_depot_select').value;
         let selectedStops = collectSelectedStops();
         let targetDays = parseFloat(document.getElementById('st_target_days').value);
@@ -1324,10 +1327,9 @@
     function calculateAxleDensityCompliantOptimization(selectedStops, selectedDepotIndex, targetDays) {
         let depot = depotData[selectedDepotIndex];
         let dpLat = parseFloat(depot[2]), dpLng = parseFloat(depot[3]), dpName = depot[1];
-        let dpLeadTime = parseFloat(depot[4]) || 6.0;      // ระยะเวลาขนส่งไป-กลับ (ชม.)
-        let dpFreightCost = parseFloat(depot[5]) || 4500;   // ต้นทุนค่าขนส่ง (บาท/เที่ยว)
+        let dpLeadTime = parseFloat(depot[4]) || 6.0;
+        let dpFreightCost = parseFloat(depot[5]) || 4500;
 
-        // 1. คำนวณเส้นทางไป-กลับ
         let totalDistance = 0;
         let routeString = `${dpName}`;
         let currentLat = dpLat, currentLng = dpLng;
@@ -1345,7 +1347,6 @@
         document.getElementById('res_distance').innerText = totalDistance.toFixed(2);
         document.getElementById('res_depot_info').innerText = `⏱️ ไป-กลับ ${dpLeadTime.toFixed(1)} ชม. | 💰 ค่าระวาง ${dpFreightCost.toLocaleString()} บาท/เที่ยว`;
 
-        // 2. กรองกองยาน
         let fleetMode = document.getElementById('opt_fleet_mode').value;
         let availableFleet = [];
         
@@ -1369,20 +1370,25 @@
             }
         }
 
-        // 3. ปรับเกณฑ์เป้าหมายตามแนวโน้มราคาน้ำมัน (Price Trend Strategy)
-        let effectiveTargetDays = targetDays;
+        // กำหนดอัตราส่วนความจุถังเป้าหมายตามแนวโน้มราคาน้ำมัน (25%, 50%, 75%, 90%, 100%)
+        let targetCapacityRatio = 0.75;
         let trendStrategyMessage = "";
 
-        if (currentPriceTrend === 'down') {
-            // 📉 แนวโน้มขาลง: ลดการสต็อก ป้องกันขาดทุนสต็อก (Stock Loss) ไม่เร่งเพิ่มรถ
-            effectiveTargetDays = Math.max(2.0, targetDays - 1.0);
-            trendStrategyMessage = `📉 <strong>กลยุทธ์ราคาขาลง (Deflationary):</strong> ปรับเกณฑ์สต็อกลงเหลือ ${effectiveTargetDays.toFixed(1)} วัน เพื่อหลีกเลี่ยงภาวะขาดทุนสต็อก (Stock Loss) และจำกัดการเรียกรถเพิ่ม`;
+        if (currentPriceTrend === 'safe') {
+            targetCapacityRatio = 0.25;
+            trendStrategyMessage = `🛡️ <strong>กลยุทธ์พอขาย (25% Tank Capacity):</strong> ประคองระดับสต็อกขั้นต่ำให้พ้น Dead Stock ไม่สั่งเกินจำเป็น`;
+        } else if (currentPriceTrend === 'down') {
+            targetCapacityRatio = 0.50;
+            trendStrategyMessage = `📉 <strong>กลยุทธ์ราคาขาลง (50% Tank Capacity):</strong> เติมไม่เกินครึ่งถัง ป้องกันภาวะขาดทุนสต็อก (Stock Loss) และจำกัดการเรียกรถเพิ่ม`;
         } else if (currentPriceTrend === 'up') {
-            // 📈 แนวโน้มขาขึ้น: เร่งตุนน้ำมันเพื่อสร้างกำไรสต็อก (Stock Gain) และช่วยให้รถคันเสริมเต็มพิกัดได้ง่ายขึ้น
-            effectiveTargetDays = targetDays + 1.5;
-            trendStrategyMessage = `📈 <strong>กลยุทธ์ราคาขาขึ้น (Windfall Arbitrage):</strong> ขยายเกณฑ์สต็อกเป็น ${effectiveTargetDays.toFixed(1)} วัน เพื่อกักตุนกำไรส่วนต่างสต็อก (Stock Gain) และหนุนให้บรรทุกเต็มคัน 100%`;
+            targetCapacityRatio = 0.90;
+            trendStrategyMessage = `📈 <strong>กลยุทธ์ราคาขาขึ้น (90% Tank Capacity):</strong> ขยายสต็อกเกือบเต็มถังเพื่อกักตุนกำไรส่วนต่างสต็อก (Stock Gain) และหนุนให้รถเต็มคัน`;
+        } else if (currentPriceTrend === 'full') {
+            targetCapacityRatio = 1.00;
+            trendStrategyMessage = `⛽ <strong>กลยุทธ์เติมเต็มถัง (100% Full Capacity):</strong> อัดฉีดน้ำมันเต็มความจุถัง 100% เพื่อความคุ้มค่าสูงสุดก่อนราคาปรับขึ้น`;
         } else {
-            trendStrategyMessage = `➡️ <strong>กลยุทธ์ราคาคงที่ (Cost Efficiency):</strong> รักษาระดับสต็อกมาตรฐาน ${targetDays.toFixed(1)} วัน และคุมให้รถคันเสริมบรรทุกเต็มพิกัดความจุ`;
+            targetCapacityRatio = 0.75;
+            trendStrategyMessage = `➡️ <strong>กลยุทธ์ราคาคงที่ (75% Standard Capacity):</strong> รักษาระดับสต็อกมาตรฐาน 75% ของถังเพื่อประสิทธิภาพต้นทุนและเที่ยววิ่ง`;
         }
 
         let calloutBox = document.getElementById('smart_strategy_callout');
@@ -1391,7 +1397,6 @@
             calloutBox.style.display = 'block';
         }
 
-        // 4. เตรียมรายการถังทั้งหมด
         let tankDemandList = [];
         selectedStops.forEach((st) => {
             st.tanks.forEach((tank, compIdx) => {
@@ -1402,8 +1407,10 @@
                 let usableStock = Math.max(0, currVol - deadStock);
                 let currentStockDays = sales > 0 ? (usableStock / sales) : 99;
 
-                let minTargetVol = (sales > 0) ? Math.round(deadStock + (sales * effectiveTargetDays)) : Math.round(maxCap * 0.8);
-                let targetCapLimit = Math.min(maxCap, minTargetVol);
+                // คำนวณเป้าหมายความจุตาม % ถังของแนวโน้มราคา ควบคู่กับเป้าหมาย Stock Day ขั้นต่ำ
+                let minDaysVol = (sales > 0) ? Math.round(deadStock + (sales * targetDays)) : 0;
+                let trendCapVol = Math.round(maxCap * targetCapacityRatio);
+                let targetCapLimit = Math.min(maxCap, Math.max(minDaysVol, trendCapVol));
                 let minNeedToFill = Math.max(0, targetCapLimit - currVol);
                 let roomInTank = maxCap - currVol;
 
@@ -1431,13 +1438,11 @@
             });
         });
 
-        // จัดเรียง Priority ตามยอดขายสูงสุดก่อน
         tankDemandList.sort((a, b) => {
             if (b.sales !== a.sales) return b.sales - a.sales;
             return a.currentStockDays - b.currentStockDays;
         });
 
-        // 5. จัดสรรช่องรถ พร้อมกฎ Axle-Load (38,000L / 35,000L / 40,000L)
         let deployedTrucks = [];
         let totalDispatched = 0;
         let weightComplianceNotes = [];
@@ -1448,11 +1453,10 @@
             let truck = availableFleet[tIdx];
             let isAdditionalTruck = (tIdx > 0);
 
-            // หากแนวโน้มราคาลง และรถคันแรกเติมสต็อกครอบคลุมขั้นต่ำแล้ว จะไม่ปล่อยคันที่สอง
-            if (isAdditionalTruck && currentPriceTrend === 'down') {
+            if (isAdditionalTruck && (currentPriceTrend === 'down' || currentPriceTrend === 'safe')) {
                 let criticalTankExists = tankDemandList.some(item => item.minNeedToFill > 0 && item.currentStockDays <= 1.5);
                 if (!criticalTankExists) {
-                    weightComplianceNotes.push(`📉 คันที่ ${tIdx+1} (${truck.plate}): งดปล่อยรถเพิ่มตามแนวโน้มราคาขาลง เพื่อรอซื้อต้นทุนที่ถูกลง`);
+                    weightComplianceNotes.push(`📉 คันที่ ${tIdx+1} (${truck.plate}): งดปล่อยรถเพิ่มตามแนวโน้มราคาลง/พอขาย เพื่อประหยัดต้นทุนค่าระวาง`);
                     break;
                 }
             }
@@ -1509,7 +1513,6 @@
                 }
             });
 
-            // ตรวจสอบกฎหมายพิกัดน้ำหนัก
             let weightViolation = false;
             let allowedMaxDiesel = 40000;
 
@@ -1575,7 +1578,6 @@
             }
         }
 
-        // 6. สรุปผลลงตาราง
         let tableBody = "";
         tankDemandList.forEach((item, index) => {
             let postVol = item.currVol + item.tankLoad;
@@ -1583,7 +1585,7 @@
             let postStockDays = item.sales > 0 ? (postUsable / item.sales) : 99;
 
             let daysBadgeColor = item.currentStockDays <= 2 ? "badge-danger" : (item.currentStockDays <= 4 ? "badge-warning" : "badge-success");
-            let postBadgeColor = postStockDays >= effectiveTargetDays ? "badge-success" : "badge-warning";
+            let postBadgeColor = postStockDays >= targetDays ? "badge-success" : "badge-warning";
 
             let allocContent = item.allocations.length > 0 
                 ? item.allocations.join('<br>') 
@@ -1628,7 +1630,7 @@
         renderPastelTankGauges(selectedStops, timeStr, true);
 
         // =========================================================================
-        // 📐 แสดงสูตรและวิธีทำ Linear Optimization พร้อมคำอธิบายตัวแปร (Nomenclature)
+        // 📐 ส่วนแสดงผล Advanced: สลับลำดับตามที่กำหนด (ตารางเมทริกซ์อยู่บนสุด / นิยามตัวแปรอยู่ล่างสุด)
         // =========================================================================
         let advBox = document.getElementById('advanced_info');
         
@@ -1667,9 +1669,97 @@
                 แบบจำลองรวมการตัดสินใจจัดสรรกองยานพาหนะและควบคุมสต็อกสินค้า (Multi-Vehicle Inventory Routing & Blending Model):
             </p>
 
+            <!-- 1. ตารางเมทริกซ์พารามิเตอร์รวมทุกถัง (ย้ายขึ้นมาอยู่บนสุด) -->
+            <div class="calc-step-card">
+                <div class="calc-step-title">
+                    <span>📋 ตารางเมทริกซ์พารามิเตอร์และตัวแปรตัดสินใจรวมทุกถังในภารกิจ (\\(p = 1, \\dots, P\\))</span>
+                </div>
+                <table class="model-matrix-table">
+                    <thead>
+                        <tr>
+                            <th>ถัง (p)</th>
+                            <th>สถานี (ชนิด)</th>
+                            <th>\\(Sales_p\\)</th>
+                            <th>\\(Cap_p\\)</th>
+                            <th>\\(Vol_p\\)</th>
+                            <th>\\(DS_p\\)</th>
+                            <th>\\(US_p\\)</th>
+                            <th>\\(SD_p\\)</th>
+                            <th>\\(Need_p\\)</th>
+                            <th>\\(Room_p\\)</th>
+                            <th>จัดส่งจริง (\\(x_p\\))</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${matrixRowsHTML}
+                        <tr style="background:#f8fafc; font-weight:bold;">
+                            <td colspan="2">ผลรวมทั้งระบบ (\\(\\Sigma\\))</td>
+                            <td>${totalSalesSum.toLocaleString()}</td>
+                            <td colspan="5">-</td>
+                            <td style="color:#b91c1c;">${totalNeedSum.toLocaleString()} L</td>
+                            <td style="color:#059669;">${totalRoomSum.toLocaleString()} L</td>
+                            <td style="color:#0369a1;">${totalDispatched.toLocaleString()} L</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 2. ฟังก์ชันเป้าหมายของระบบ -->
+            <div class="calc-step-card">
+                <div class="calc-step-title">
+                    <span>🎯 1. ฟังก์ชันเป้าหมายของระบบ (Global Objective Function)</span>
+                </div>
+                มุ่งเน้นการจัดสรรน้ำมันลงในถังที่มีอัตราการจำหน่ายสูงสุดเพื่อเร่งรอบหมุนเวียนสต็อกสูงสุด พร้อมลดต้นทุนการปล่อยรถที่ไม่จำเป็น:<br>
+                $$\\max Z = \\sum_{p=1}^{P} \\left( Sales_p \\cdot x_p \\right) - \\sum_{v \\in \\mathcal{V}} \\left( F_v \\cdot u_v \\right)$$
+                
+                <strong>แทนค่าสัมประสิทธิ์ตัวเลขจริงในระบบ:</strong><br>
+                $$\\max Z = ${objNumericTerms.length > 120 ? objNumericTerms.substring(0, 120) + ' + \\dots' : objNumericTerms} - ${dpFreightCost}(u_1) - ${dpFreightCost}(u_2)$$
+            </div>
+
+            <!-- 3. ชุดข้อจำกัดของระบบ (System Constraints) -->
+            <div class="calc-step-card">
+                <div class="calc-step-title">
+                    <span>⚙️ 2. ชุดข้อจำกัดของระบบ (System Constraints) & การแทนค่าอสมการ</span>
+                </div>
+
+                <strong>2.1 ข้อจำกัดความต้องการสต็อกปลอดภัยและไม่ล้นถัง (Demand & Ullage Constraints):</strong><br>
+                $$\\forall p \\in \\{1, \\dots, P\\}: \\quad Need_p \\le x_p \\le Room_p$$
+                แทนค่าอสมการจริงทุกถัง (พิจารณาเกณฑ์ความจุถังเป้าหมาย ${(targetCapacityRatio*100).toFixed(0)}%):<br>
+                ${tankDemandList.map((t, i) => `\\(\\bullet \\quad \\text{ถัง } p=${i+1} \\, (${t.type}): \\quad \\mathbf{${t.minNeedToFill.toLocaleString()}} \\le x_{${i+1}} \\le \\mathbf{${t.roomInTank.toLocaleString()}} \\quad \\text{(จ่ายจริง } x_{${i+1}} = ${t.tankLoad.toLocaleString()}\\text{ L)}\\)`).join('<br>')}<br><br>
+
+                <strong>2.2 ข้อจำกัดความจุช่องบรรทุกแบบไม่กระฉอก (Slosh-Safe Compartment Allocation):</strong><br>
+                $$Load_{vc} = \\sum_{p=1}^{P} y_{vc}^{p} \\cdot \\left( V_{vc} - 1000 \\cdot s_{vc} \\right)$$
+                $$\\sum_{p=1}^{P} y_{vc}^{p} \\le 1, \\quad y_{vc}^{p} \\in \\{0, 1\\}, \\quad s_{vc} \\in \\{0, 1\\}$$<br>
+
+                <strong>2.3 ข้อจำกัดบังคับเต็มคันรถสำหรับรถที่เพิ่มเข้ามา (Strict Full-Capacity Rule):</strong><br>
+                $$\\sum_{c \\in \\mathcal{C}_v} Load_{vc} = \\text{MaxLegalPayload}_v \\cdot u_v \\quad \\forall v > 1$$<br>
+
+                <strong>2.4 ข้อจำกัดพิกัดน้ำหนักตามความหนาแน่นน้ำมัน (Axle-Load Weight Compliance):</strong><br>
+                $$V_{v}^{\\text{Diesel}} = \\sum_{p \\in \\text{Diesel}} x_{vp}, \\quad V_{v}^{\\text{Benzene}} = \\sum_{p \\in \\text{Benzene}} x_{vp}$$
+                $$\\begin{cases} 
+                V_{v}^{\\text{Diesel}} \\le 38,000 \\text{ L}, & \\text{ถ้า } V_{v}^{\\text{Benzene}} = 0 \\text{ L} \\\\[4pt]
+                V_{v}^{\\text{Diesel}} \\le 35,000 \\text{ L}, & \\text{ถ้า } 4,000 \\le V_{v}^{\\text{Benzene}} < 8,000 \\text{ L} \\\\[4pt]
+                V_{v}^{\\text{Diesel}} \\le 32,000 \\text{ L}, & \\text{ถ้า } V_{v}^{\\text{Benzene}} \\ge 8,000 \\text{ L}
+                \\end{cases}$$
+                แทนค่าจริงบนรถคันหลัก (คันที่ 1):<br>
+                $$\\text{ตรวจสอบ: } V_1^{\\text{Diesel}} = \\mathbf{${firstTruckDieselTotal.toLocaleString()}\\text{ L}}, \\quad V_1^{\\text{Benzene}} = \\mathbf{${firstTruckBenzeneTotal.toLocaleString()}\\text{ L}} \\quad \\implies \\mathbf{\\text{ผ่านเกณฑ์พิกัดน้ำหนักตามกฎหมาย}}$$
+            </div>
+
+            <!-- 4. สรุปผลลัพธ์เชิงตัวเลขของระบบ -->
+            <div class="calc-step-card" style="border-left: 4px solid #10b981;">
+                <div class="calc-step-title" style="color:#065f46;">
+                    <span>✅ 3. ผลลัพธ์การหาค่าเหมาะที่สุดของระบบ (Global Optimal Solution)</span>
+                </div>
+                - ปริมาณน้ำมันจัดส่งรวมทั้งสิ้น: \\( \\sum_{p=1}^{P} x_p = \\mathbf{${totalDispatched.toLocaleString()} \\text{ ลิตร}} \\)<br>
+                - จำนวนรถบรรทุกที่เปิดใช้งานจริง: \\( \\sum_{v} u_v = \\mathbf{${usedCount} \\text{ คัน}} \\) (${deployedTrucks.map(t=>t.plate).join(', ')})<br>
+                - ระยะทางขนส่งรวมทั้งสิ้น (Routing Distance): \\( \\mathbf{${totalDistance.toFixed(2)} \\text{ กิโลเมตร}} \\)<br>
+                - การประเมิน Lead Time คลังต้นทาง (${depot[1]}): <strong>${dpLeadTime} ชั่วโมง</strong> | ต้นทุนค่าระวางรวม: <strong>${(usedCount * dpFreightCost).toLocaleString()} บาท</strong>
+            </div>
+
+            <!-- 5. นิยามและคำอธิบายตัวแปรทางคณิตศาสตร์ (ย้ายลงมาอยู่ล่างสุด) -->
             <div class="calc-step-card" style="border-left: 4px solid #6366f1;">
                 <div class="calc-step-title" style="color:#4338ca;">
-                    <span>📖 นิยามและคำอธิบายตัวแปรทางคณิตศาสตร์ (Mathematical Nomenclature & Definitions)</span>
+                    <span>📖 4. นิยามและคำอธิบายตัวแปรทางคณิตศาสตร์ (Mathematical Nomenclature & Definitions)</span>
                 </div>
                 <table class="nomenclature-table">
                     <thead>
@@ -1727,12 +1817,12 @@
                         </tr>
                         <tr>
                             <td>\\( TargetVol_p \\)</td>
-                            <td class="desc"><strong>ระดับปริมาตรเป้าหมายหลังเติม</strong> เพื่อให้ครอบคลุมเกณฑ์วันปลอดภัย \\(T_{target}\\)</td>
+                            <td class="desc"><strong>ระดับปริมาตรเป้าหมายหลังเติม</strong> เพื่อให้ครอบคลุมเกณฑ์วันปลอดภัย \\(T_{target}\\) และ % ถังตามแนวโน้มราคา</td>
                             <td class="unit">ลิตร</td>
                         </tr>
                         <tr>
                             <td>\\( Need_p \\)</td>
-                            <td class="desc"><strong>ปริมาณน้ำมันขั้นต่ำที่ต้องเติมเพิ่ม</strong> เพื่อให้ระดับสต็อกไม่ต่ำกว่าเกณฑ์ \\(T_{target}\\)</td>
+                            <td class="desc"><strong>ปริมาณน้ำมันขั้นต่ำที่ต้องเติมเพิ่ม</strong> เพื่อให้ระดับสต็อกไม่ต่ำกว่าเกณฑ์ความปลอดภัย</td>
                             <td class="unit">ลิตร</td>
                         </tr>
                         <tr>
@@ -1757,94 +1847,6 @@
                         </tr>
                     </tbody>
                 </table>
-            </div>
-
-            <!-- กล่องที่ 1: ตารางสรุปพารามิเตอร์รวมทุกถังในระบบ -->
-            <div class="calc-step-card">
-                <div class="calc-step-title">
-                    <span>📋 ตารางเมทริกซ์พารามิเตอร์และตัวแปรตัดสินใจรวมทุกถังในภารกิจ (\\(p = 1, \\dots, P\\))</span>
-                </div>
-                <table class="model-matrix-table">
-                    <thead>
-                        <tr>
-                            <th>ถัง (p)</th>
-                            <th>สถานี (ชนิด)</th>
-                            <th>\\(Sales_p\\)</th>
-                            <th>\\(Cap_p\\)</th>
-                            <th>\\(Vol_p\\)</th>
-                            <th>\\(DS_p\\)</th>
-                            <th>\\(US_p\\)</th>
-                            <th>\\(SD_p\\)</th>
-                            <th>\\(Need_p\\)</th>
-                            <th>\\(Room_p\\)</th>
-                            <th>จัดส่งจริง (\\(x_p\\))</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${matrixRowsHTML}
-                        <tr style="background:#f8fafc; font-weight:bold;">
-                            <td colspan="2">ผลรวมทั้งระบบ (\\(\\Sigma\\))</td>
-                            <td>${totalSalesSum.toLocaleString()}</td>
-                            <td colspan="5">-</td>
-                            <td style="color:#b91c1c;">${totalNeedSum.toLocaleString()} L</td>
-                            <td style="color:#059669;">${totalRoomSum.toLocaleString()} L</td>
-                            <td style="color:#0369a1;">${totalDispatched.toLocaleString()} L</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- กล่องที่ 2: ฟังก์ชันเป้าหมายและวิธีทำแทนค่า -->
-            <div class="calc-step-card">
-                <div class="calc-step-title">
-                    <span>🎯 1. ฟังก์ชันเป้าหมายของระบบ (Global Objective Function)</span>
-                </div>
-                มุ่งเน้นการจัดสรรน้ำมันลงในถังที่มีอัตราการจำหน่ายสูงสุดเพื่อเร่งรอบหมุนเวียนสต็อกสูงสุด พร้อมลดต้นทุนการปล่อยรถที่ไม่จำเป็น:<br>
-                $$\\max Z = \\sum_{p=1}^{P} \\left( Sales_p \\cdot x_p \\right) - \\sum_{v \\in \\mathcal{V}} \\left( F_v \\cdot u_v \\right)$$
-                
-                <strong>แทนค่าสัมประสิทธิ์ตัวเลขจริงในระบบ:</strong><br>
-                $$\\max Z = ${objNumericTerms.length > 120 ? objNumericTerms.substring(0, 120) + ' + \\dots' : objNumericTerms} - ${dpFreightCost}(u_1) - ${dpFreightCost}(u_2)$$
-            </div>
-
-            <!-- กล่องที่ 3: ข้อจำกัดทางคณิตศาสตร์ทั้งหมด (Constraints) -->
-            <div class="calc-step-card">
-                <div class="calc-step-title">
-                    <span>⚙️ 2. ชุดข้อจำกัดของระบบ (System Constraints) & การแทนค่าอสมการ</span>
-                </div>
-
-                <strong>2.1 ข้อจำกัดความต้องการสต็อกปลอดภัยและไม่ล้นถัง (Demand & Ullage Constraints):</strong><br>
-                $$\\forall p \\in \\{1, \\dots, P\\}: \\quad Need_p \\le x_p \\le Room_p$$
-                แทนค่าอสมการจริงทุกถัง:<br>
-                ${tankDemandList.map((t, i) => `\\(\\bullet \\quad \\text{ถัง } p=${i+1} \\, (${t.type}): \\quad \\mathbf{${t.minNeedToFill.toLocaleString()}} \\le x_{${i+1}} \\le \\mathbf{${t.roomInTank.toLocaleString()}} \\quad \\text{(จ่ายจริง } x_{${i+1}} = ${t.tankLoad.toLocaleString()}\\text{ L)}\\)`).join('<br>')}<br><br>
-
-                <strong>2.2 ข้อจำกัดความจุช่องบรรทุกแบบไม่กระฉอก (Slosh-Safe Compartment Allocation):</strong><br>
-                $$Load_{vc} = \\sum_{p=1}^{P} y_{vc}^{p} \\cdot \\left( V_{vc} - 1000 \\cdot s_{vc} \\right)$$
-                $$\\sum_{p=1}^{P} y_{vc}^{p} \\le 1, \\quad y_{vc}^{p} \\in \\{0, 1\\}, \\quad s_{vc} \\in \\{0, 1\\}$$<br>
-
-                <strong>2.3 ข้อจำกัดบังคับเต็มคันรถสำหรับรถที่เพิ่มเข้ามา (Strict Full-Capacity Rule):</strong><br>
-                $$\\sum_{c \\in \\mathcal{C}_v} Load_{vc} = \\text{MaxLegalPayload}_v \\cdot u_v \\quad \\forall v > 1$$
-                <em>(หากรถคันที่ 2 ถูกปล่อยออกวิ่ง จะต้องบรรทุกเต็มพิกัดกฎหมายของคันนั้น 100% เต็มเท่านั้น)</em><br><br>
-
-                <strong>2.4 ข้อจำกัดพิกัดน้ำหนักตามความหนาแน่นน้ำมัน (Axle-Load Weight Compliance):</strong><br>
-                $$V_{v}^{\\text{Diesel}} = \\sum_{p \\in \\text{Diesel}} x_{vp}, \\quad V_{v}^{\\text{Benzene}} = \\sum_{p \\in \\text{Benzene}} x_{vp}$$
-                $$\\begin{cases} 
-                V_{v}^{\\text{Diesel}} \\le 38,000 \\text{ L}, & \\text{ถ้า } V_{v}^{\\text{Benzene}} = 0 \\text{ L} \\\\[4pt]
-                V_{v}^{\\text{Diesel}} \\le 35,000 \\text{ L}, & \\text{ถ้า } 4,000 \\le V_{v}^{\\text{Benzene}} < 8,000 \\text{ L} \\\\[4pt]
-                V_{v}^{\\text{Diesel}} \\le 32,000 \\text{ L}, & \\text{ถ้า } V_{v}^{\\text{Benzene}} \\ge 8,000 \\text{ L}
-                \\end{cases}$$
-                แทนค่าจริงบนรถคันหลัก (คันที่ 1):<br>
-                $$\\text{ตรวจสอบ: } V_1^{\\text{Diesel}} = \\mathbf{${firstTruckDieselTotal.toLocaleString()}\\text{ L}}, \\quad V_1^{\\text{Benzene}} = \\mathbf{${firstTruckBenzeneTotal.toLocaleString()}\\text{ L}} \\quad \\implies \\mathbf{\\text{ผ่านเกณฑ์พิกัดน้ำหนักตามกฎหมาย}}$$
-            </div>
-
-            <!-- กล่องที่ 4: สรุปผลลัพธ์เชิงตัวเลขของระบบ -->
-            <div class="calc-step-card" style="border-left: 4px solid #10b981;">
-                <div class="calc-step-title" style="color:#065f46;">
-                    <span>✅ 3. ผลลัพธ์การหาค่าเหมาะที่สุดของระบบ (Global Optimal Solution)</span>
-                </div>
-                - ปริมาณน้ำมันจัดส่งรวมทั้งสิ้น: \\( \\sum_{p=1}^{P} x_p = \\mathbf{${totalDispatched.toLocaleString()} \\text{ ลิตร}} \\)<br>
-                - จำนวนรถบรรทุกที่เปิดใช้งานจริง: \\( \\sum_{v} u_v = \\mathbf{${usedCount} \\text{ คัน}} \\) (${deployedTrucks.map(t=>t.plate).join(', ')})<br>
-                - ระยะทางขนส่งรวมทั้งสิ้น (Routing Distance): \\( \\mathbf{${totalDistance.toFixed(2)} \\text{ กิโลเมตร}} \\)<br>
-                - การประเมิน Lead Time คลังต้นทาง (${depot[1]}): <strong>${dpLeadTime} ชั่วโมง</strong> | ต้นทุนค่าระวาง: <strong>${(usedCount * dpFreightCost).toLocaleString()} บาท</strong>
             </div>
         `;
 
