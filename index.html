@@ -42,14 +42,13 @@
         .delivery-sequence-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .delivery-sequence-label { font-size: 14px; font-weight: 600; color: #334155; margin: 0; }
 
-        /* Section Header with Price Trend Toggle (5 ระดับ) */
+        /* Section Header with Price Trend Toggle */
         .plan-header-row { display: flex; justify-content: space-between; align-items: center; margin: 25px 0 12px 0; flex-wrap: wrap; gap: 10px; }
         .plan-title { margin: 0; font-size: 16px; color: #1e293b; }
         
         .trend-toggle-group { display: inline-flex; background: #e2e8f0; padding: 3px; border-radius: 20px; gap: 2px; flex-wrap: wrap; }
-        .trend-btn { border: none; background: transparent; padding: 5px 11px; font-family: 'Prompt'; font-size: 12px; font-weight: 500; color: #475569; border-radius: 16px; cursor: pointer; transition: 0.2s; }
+        .trend-btn { border: none; background: transparent; padding: 5px 12px; font-family: 'Prompt'; font-size: 12px; font-weight: 500; color: #475569; border-radius: 16px; cursor: pointer; transition: 0.2s; }
         .trend-btn.active { background: #ffffff; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .trend-btn.safe.active { color: #d97706; background: #fef3c7; }
         .trend-btn.down.active { color: #dc2626; background: #fee2e2; }
         .trend-btn.flat.active { color: #0284c7; background: #e0f2fe; }
         .trend-btn.up.active { color: #16a34a; background: #dcfce7; }
@@ -114,6 +113,8 @@
         .btn:active { transform: scale(0.98); }
         .btn-add { background-color: var(--pastel-pink); color: #333; margin-bottom: 20px; }
         .btn-submit { background-color: var(--pastel-blue); color: #333; }
+        .btn-delete { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; font-weight: 500; }
+        .btn-delete:hover { background-color: #fca5a5; }
         .btn-generate { background-color: var(--pastel-green); color: #1a4a28; font-size: 16px; font-weight: 600; }
         .divider { height: 1px; background-color: var(--border-color); margin: 25px 0; }
         .select-db { background: #eef2f3; border-color: #cdd6db; font-weight: 600; color: #2c3e50; }
@@ -127,6 +128,7 @@
         .badge-warning { background: #fff3cd; color: #856404; }
         .badge-danger { background: #f8d7da; color: #721c24; }
         .badge-priority { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .badge-outlier { background: #fee2e2; color: #991b1b; border: 1px dashed #ef4444; }
         
         .adv-box { margin-top: 15px; padding: 24px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13.5px; line-height: 1.8; color: #1e293b; }
         .calc-step-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 20px; margin: 14px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
@@ -173,9 +175,9 @@
 
     <!-- MAIN TAB 1: Optimization (หน้าแรก) -->
     <div id="tab-result" class="tab-content active">
-        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Smart Predictive Dispatching & Price Trend Model)</h3>
+        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Smart Density & Outlier-Filtering Model)</h3>
         <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">
-            ระบบควบคุมพิกัดน้ำหนัก: <strong>ดีเซลล้วนทั้งคันบรรทุกได้สูงสุด 38,000L</strong> | หากมีเบนซิน 4,000L บรรทุกดีเซลได้ 35,000L | หากมีเบนซิน $\ge$ 8,000L บรรทุกเต็มพิกัด 40,000L
+            ระบบควบคุมพิกัดน้ำหนัก: <strong>ดีเซลล้วนได้สูงสุด 38,000L</strong> | เบนซิน 4,000L โหลดดีเซลได้ 35,000L | เบนซิน $\ge$ 8,000L โหลดเต็มพิกัด 40,000L พร้อมตัดถัง Outlier อัตโนมัติ
         </p>
         
         <div class="control-panel">
@@ -242,23 +244,22 @@
                 <p style="margin:5px 0;"><strong>สถานะ Constraint & พิกัดน้ำหนัก:</strong> <span id="res_status"></span></p>
             </div>
             
-            <!-- แถวหัวข้อแผนการโหลดและจ่ายน้ำมัน พร้อมปุ่มกดเลือกแนวโน้มราคาน้ำมัน (5 ระดับ) อยู่แถวเดียวกัน -->
+            <!-- แถวหัวข้อแผนการโหลดและจ่ายน้ำมัน พร้อมปุ่มแนวโน้มราคาน้ำมัน (ลง 25% / คงที่ 50% / ขึ้น 75% / เต็มถัง 100%) -->
             <div class="plan-header-row">
                 <h4 class="plan-title">📊 แผนการโหลดและจ่ายน้ำมัน (ควบคุมพิกัดน้ำหนักกฎหมายขนส่ง)</h4>
                 
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-size:13px; font-weight:500; color:#64748b;">แนวโน้มราคาน้ำมัน:</span>
                     <div class="trend-toggle-group">
-                        <button type="button" class="trend-btn safe" onclick="setPriceTrend('safe')">🛡️ พอขาย (25%)</button>
-                        <button type="button" class="trend-btn down" onclick="setPriceTrend('down')">📉 ลง (50%)</button>
-                        <button type="button" class="trend-btn flat active" onclick="setPriceTrend('flat')">➡️ คงที่ (75%)</button>
-                        <button type="button" class="trend-btn up" onclick="setPriceTrend('up')">📈 ขึ้น (90%)</button>
+                        <button type="button" class="trend-btn down" onclick="setPriceTrend('down')">📉 ลง (25%)</button>
+                        <button type="button" class="trend-btn flat active" onclick="setPriceTrend('flat')">➡️ คงที่ (50%)</button>
+                        <button type="button" class="trend-btn up" onclick="setPriceTrend('up')">📈 ขึ้น (75%)</button>
                         <button type="button" class="trend-btn full" onclick="setPriceTrend('full')">⛽ เต็มถัง (100%)</button>
                     </div>
                 </div>
             </div>
 
-            <!-- กล่องแสดงข้อเสนอแนะเชิงกลยุทธ์ตามแนวโน้มราคาและความจุถัง -->
+            <!-- กล่องแสดงข้อเสนอแนะเชิงกลยุทธ์ตามแนวโน้มราคาและการตัด Outlier -->
             <div id="smart_strategy_callout" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px 16px; margin-bottom:15px; font-size:13px; color:#166534; display:none;"></div>
 
             <table class="result-table">
@@ -291,7 +292,7 @@
             </div>
         </div>
 
-        <!-- SUB-TAB 1: ปั๊มน้ำมัน & สเปกถัง -->
+        <!-- SUB-TAB 1: ปั๊มน้ำมัน & สเปกถัง (พร้อมปุ่มลบปั๊มออกจาก Database) -->
         <div id="sub-station" class="sub-tab-content active">
             <h3 style="margin-top:0;">ข้อมูลสถานีปลายทางและสเปกถังน้ำมัน (Station Master Data)</h3>
             
@@ -329,10 +330,17 @@
             </div>
             <button class="btn btn-add" onclick="addCompartment()">+ เพิ่มถังน้ำมันให้ปั๊มนี้</button>
 
-            <button class="btn btn-submit" style="margin-top:10px; margin-bottom:20px;" onclick="saveStation()">💾 บันทึกปั๊มและสเปกถังลง Google Sheets</button>
+            <div class="grid-2 form-group" style="margin-top:10px; margin-bottom:20px;">
+                <div>
+                    <button class="btn btn-submit" onclick="saveStation()">💾 บันทึกปั๊มและสเปกถังลง Google Sheets</button>
+                </div>
+                <div>
+                    <button class="btn btn-delete" onclick="deleteStationAction()">🗑️ ลบปั๊มนี้ออกจากฐานข้อมูล</button>
+                </div>
+            </div>
         </div>
 
-        <!-- SUB-TAB 2: คลังน้ำมัน (เพิ่มระยะเวลาขนส่งไปกลับ และ ราคาค่าขนส่ง) -->
+        <!-- SUB-TAB 2: คลังน้ำมัน (พร้อมปุ่มลบคลังออกจาก Database) -->
         <div id="sub-depot" class="sub-tab-content">
             <h3 style="margin-top:0;">ข้อมูลคลังต้นทาง (Depot Lead Time & Freight Cost)</h3>
             <p style="font-size:13.5px; color:var(--text-light); margin-bottom:20px;">กำหนดระยะเวลาขนส่งไป-กลับ และต้นทุนค่าขนส่งเพื่อประเมินความคุ้มค่าและจุดสั่งซื้อสต็อก</p>
@@ -367,7 +375,14 @@
                 <div><label>ลองจิจูด (Lng)</label><input type="text" id="dp_lng" value="100.450000" readonly style="background:#eee;"></div>
             </div>
             
-            <button class="btn btn-submit" onclick="saveDepot()">💾 บันทึกข้อมูลคลังและค่าขนส่งลง Google Sheets</button>
+            <div class="grid-2 form-group" style="margin-top:10px; margin-bottom:20px;">
+                <div>
+                    <button class="btn btn-submit" onclick="saveDepot()">💾 บันทึกข้อมูลคลังนี้ลง Google Sheets</button>
+                </div>
+                <div>
+                    <button class="btn btn-delete" onclick="deleteDepotAction()">🗑️ ลบคลังนี้ออกจากฐานข้อมูล</button>
+                </div>
+            </div>
         </div>
 
         <!-- SUB-TAB 3: กองยานรถขนส่ง -->
@@ -434,7 +449,7 @@
     let mapStation, mapDepot, markerStation, markerDepot;
     let mapStationInitialized = false, mapDepotInitialized = false, compCount = 1;
 
-    // สถานะแนวโน้มราคาน้ำมัน: 'safe' (25%), 'down' (50%), 'flat' (75%), 'up' (90%), 'full' (100%)
+    // สถานะแนวโน้มราคาน้ำมัน: 'down' (25%), 'flat' (50%), 'up' (75%), 'full' (100%)
     let currentPriceTrend = 'flat';
 
     let fleetList = [
@@ -451,7 +466,6 @@
         return name.includes("G95") || name.includes("G91") || name.includes("E20") || name.includes("E85") || name.includes("ULG") || name.includes("BENZENE") || name.includes("เบนซิน") || name.includes("แก๊สโซฮอล์");
     }
 
-    // ฟังก์ชันสลับปุ่มเลือกแนวโน้มราคาน้ำมัน (5 ระดับ)
     function setPriceTrend(trend) {
         currentPriceTrend = trend;
         document.querySelectorAll('.trend-btn').forEach(b => b.classList.remove('active'));
@@ -600,11 +614,11 @@
 
             let resStation = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Stations!A2:E' });
             stationData = resStation.result.values || [];
-            updateDropdown('db_station_list', stationData, 'เพิ่มปั๊มใหม่ (กรอกข้อมูลด้านล่าง)');
+            updateDropdown('db_station_list', stationData, 'เลือกปั๊มเพื่อแก้ไขหรือลบ');
 
             let resDepot = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Depots!A2:F' });
             depotData = resDepot.result.values || [];
-            updateDropdown('db_depot_list', depotData, 'เพิ่มคลังใหม่ (กรอกข้อมูลด้านล่าง)');
+            updateDropdown('db_depot_list', depotData, 'เลือกคลังเพื่อแก้ไขหรือลบ');
             updateDropdown('opt_depot_select', depotData, 'เลือกคลังต้นทาง');
 
             try {
@@ -877,6 +891,39 @@
         } catch(err) { console.error(err); alert('บันทึกไม่สำเร็จ'); }
     }
 
+    async function deleteStationAction() {
+        let index = document.getElementById('db_station_list').value;
+        if (index === "") return alert('กรุณาเลือกปั๊มที่ต้องการลบจาก Dropdown ก่อนครับ');
+
+        let row = stationData[index];
+        let stName = row[1] || row[0];
+
+        if (!confirm(`⚠️ คุณแน่ใจหรือไม่ว่าต้องการลบ [${stName}] ออกจากฐานข้อมูล Google Sheets อย่างถาวร?`)) {
+            return;
+        }
+
+        stationData.splice(index, 1);
+        let rows = [["รหัสปั๊ม", "ชื่อปั๊ม", "Lat", "Lng", "สเปกถัง (JSON)"]];
+        stationData.forEach(r => rows.push(r));
+
+        try {
+            await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId: SPREADSHEET_ID, range: 'Stations!A:E' });
+            await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: 'Stations!A1',
+                valueInputOption: 'USER_ENTERED',
+                resource: { values: rows }
+            });
+            alert(`✅ ลบปั๊ม [${stName}] ออกจาก Google Sheets สำเร็จเรียบร้อย!`);
+            clearForm('st');
+            renderSpecsInMasterTab([]);
+            fetchDataFromSheets();
+        } catch(err) {
+            console.error("Delete station failed:", err);
+            alert("ลบปั๊มไม่สำเร็จ: " + (err.result?.error?.message || err.message));
+        }
+    }
+
     function loadStationData() {
         let index = document.getElementById('db_station_list').value;
         if (index === "") {
@@ -1081,12 +1128,17 @@
         let usableStock = Math.max(0, currVol - deadStock);
         let stockDays = usableStock / sales;
 
-        badge.innerText = `${stockDays.toFixed(1)} วัน`;
-        if (stockDays <= 2.0) {
+        if (stockDays >= 15.0) {
+            badge.innerText = `${stockDays.toFixed(1)} วัน (Outlier)`;
+            badge.className = "tank-days-badge badge badge-outlier";
+        } else if (stockDays <= 2.0) {
+            badge.innerText = `${stockDays.toFixed(1)} วัน`;
             badge.className = "tank-days-badge badge badge-danger";
         } else if (stockDays <= 4.0) {
+            badge.innerText = `${stockDays.toFixed(1)} วัน`;
             badge.className = "tank-days-badge badge badge-warning";
         } else {
+            badge.innerText = `${stockDays.toFixed(1)} วัน`;
             badge.className = "tank-days-badge badge badge-success";
         }
     }
@@ -1203,7 +1255,10 @@
                 let liquidBaseColor = "#b7e4c7";
                 let badgeClass = "badge-success";
 
-                if (baseStockDays <= 2.0) {
+                if (baseStockDays >= 15.0) {
+                    liquidBaseColor = "#fef08a";
+                    badgeClass = "badge-outlier";
+                } else if (baseStockDays <= 2.0) {
                     liquidBaseColor = "#ffc2d1";
                     badgeClass = "badge-danger";
                 } else if (baseStockDays <= 4.0) {
@@ -1244,7 +1299,7 @@
                     `;
                     daysBadgeHTML = `
                         <span class="tank-gauge-days badge ${badgeClass}">
-                            ${sales > 0 ? `${baseStockDays.toFixed(1)} วัน` : 'ไม่มียอดขาย'}
+                            ${sales > 0 ? `${baseStockDays.toFixed(1)} วัน ${baseStockDays>=15?'(Outlier)':''}` : 'ไม่มียอดขาย'}
                         </span>
                     `;
                 }
@@ -1370,34 +1425,31 @@
             }
         }
 
-        // กำหนดอัตราส่วนความจุถังเป้าหมายตามแนวโน้มราคาน้ำมัน (25%, 50%, 75%, 90%, 100%)
-        let targetCapacityRatio = 0.75;
+        // กำหนดอัตราส่วนความจุถังเป้าหมายตามแนวโน้มราคาน้ำมัน (ลง 25% / คงที่ 50% / ขึ้น 75% / เต็มถัง 100%)
+        let targetCapacityRatio = 0.50;
         let trendStrategyMessage = "";
 
-        if (currentPriceTrend === 'safe') {
+        if (currentPriceTrend === 'down') {
             targetCapacityRatio = 0.25;
-            trendStrategyMessage = `🛡️ <strong>กลยุทธ์พอขาย (25% Tank Capacity):</strong> ประคองระดับสต็อกขั้นต่ำให้พ้น Dead Stock ไม่สั่งเกินจำเป็น`;
-        } else if (currentPriceTrend === 'down') {
-            targetCapacityRatio = 0.50;
-            trendStrategyMessage = `📉 <strong>กลยุทธ์ราคาขาลง (50% Tank Capacity):</strong> เติมไม่เกินครึ่งถัง ป้องกันภาวะขาดทุนสต็อก (Stock Loss) และจำกัดการเรียกรถเพิ่ม`;
+            trendStrategyMessage = `📉 <strong>กลยุทธ์ราคาขาลง (25% Tank Capacity):</strong> คุมสต็อกไม่เกิน 25% ของถังเพื่อป้องกันภาวะขาดทุนสต็อก (Stock Loss) และจำกัดการเรียกรถ`;
         } else if (currentPriceTrend === 'up') {
-            targetCapacityRatio = 0.90;
-            trendStrategyMessage = `📈 <strong>กลยุทธ์ราคาขาขึ้น (90% Tank Capacity):</strong> ขยายสต็อกเกือบเต็มถังเพื่อกักตุนกำไรส่วนต่างสต็อก (Stock Gain) และหนุนให้รถเต็มคัน`;
+            targetCapacityRatio = 0.75;
+            trendStrategyMessage = `📈 <strong>กลยุทธ์ราคาขาขึ้น (75% Tank Capacity):</strong> ขยายสต็อก 75% ของถังเพื่อกักตุนกำไรส่วนต่างสต็อก (Stock Gain) ก่อนราคาปรับขึ้น`;
         } else if (currentPriceTrend === 'full') {
             targetCapacityRatio = 1.00;
-            trendStrategyMessage = `⛽ <strong>กลยุทธ์เติมเต็มถัง (100% Full Capacity):</strong> อัดฉีดน้ำมันเต็มความจุถัง 100% เพื่อความคุ้มค่าสูงสุดก่อนราคาปรับขึ้น`;
+            trendStrategyMessage = `⛽ <strong>กลยุทธ์เติมเต็มถัง (100% Full Capacity):</strong> อัดฉีดน้ำมันเต็มความจุถัง 100% เพื่อกักตุนสต็อกสูงสุดก่อนราคาปรับขึ้นครั้งใหญ่`;
         } else {
-            targetCapacityRatio = 0.75;
-            trendStrategyMessage = `➡️ <strong>กลยุทธ์ราคาคงที่ (75% Standard Capacity):</strong> รักษาระดับสต็อกมาตรฐาน 75% ของถังเพื่อประสิทธิภาพต้นทุนและเที่ยววิ่ง`;
+            targetCapacityRatio = 0.50;
+            trendStrategyMessage = `➡️ <strong>กลยุทธ์ราคาคงที่ (50% Standard Capacity):</strong> รักษาระดับสต็อกมาตรฐาน 50% ของถังเพื่อประสิทธิภาพต้นทุนและเที่ยววิ่ง`;
         }
 
-        let calloutBox = document.getElementById('smart_strategy_callout');
-        if (calloutBox) {
-            calloutBox.innerHTML = trendStrategyMessage;
-            calloutBox.style.display = 'block';
-        }
-
+        // คำนวณภาพรวมทั้งสถานี (Holistic Analysis & Outlier Detection)
         let tankDemandList = [];
+        let outlierTanksCount = 0;
+        let totalNetCapacity = 0;
+        let totalNetInventory = 0;
+        let totalNetSalesVelocity = 0;
+
         selectedStops.forEach((st) => {
             st.tanks.forEach((tank, compIdx) => {
                 let maxCap = tank.max;
@@ -1407,11 +1459,23 @@
                 let usableStock = Math.max(0, currVol - deadStock);
                 let currentStockDays = sales > 0 ? (usableStock / sales) : 99;
 
-                // คำนวณเป้าหมายความจุตาม % ถังของแนวโน้มราคา ควบคู่กับเป้าหมาย Stock Day ขั้นต่ำ
+                // 🧠 ตรวจจับ Outlier: ยอดขายต่ำผิดปกติและสต็อกเหลือเยอะ (Stock Day >= 15 วัน หรือขายต่ำกว่า 300L/วันแต่เหลือเกิน 60%)
+                let isOutlier = (currentStockDays >= 15.0) || (sales < 300 && (currVol / maxCap) > 0.60);
+
+                if (isOutlier) {
+                    outlierTanksCount++;
+                } else {
+                    totalNetCapacity += maxCap;
+                    totalNetInventory += currVol;
+                    totalNetSalesVelocity += sales;
+                }
+
                 let minDaysVol = (sales > 0) ? Math.round(deadStock + (sales * targetDays)) : 0;
                 let trendCapVol = Math.round(maxCap * targetCapacityRatio);
                 let targetCapLimit = Math.min(maxCap, Math.max(minDaysVol, trendCapVol));
-                let minNeedToFill = Math.max(0, targetCapLimit - currVol);
+                
+                // หากเป็น Outlier ให้ตัดออกจากการสั่งเติมรอบนี้ทันที
+                let minNeedToFill = isOutlier ? 0 : Math.max(0, targetCapLimit - currVol);
                 let roomInTank = maxCap - currVol;
 
                 tankDemandList.push({
@@ -1423,6 +1487,7 @@
                     type: tank.type || "G95",
                     isDiesel: isDieselFamily(tank.type),
                     isBenzene: isBenzeneFamily(tank.type),
+                    isOutlier: isOutlier,
                     maxCap: maxCap,
                     currVol: currVol,
                     sales: sales,
@@ -1438,7 +1503,23 @@
             });
         });
 
+        // คำนวณดัชนีระดับสต็อกสุทธิเฉลี่ยทั้งระบบ (Net Aggregate Inventory Ratio)
+        let aggregateStockPercent = totalNetCapacity > 0 ? ((totalNetInventory / totalNetCapacity) * 100).toFixed(1) : 0;
+
+        let calloutBox = document.getElementById('smart_strategy_callout');
+        if (calloutBox) {
+            calloutBox.innerHTML = `
+                ${trendStrategyMessage}<br>
+                <span style="font-size:12px; color:#1e293b; margin-top:4px; display:inline-block;">
+                    📊 <strong>ภาพรวมเครือข่าย:</strong> ปริมาณสต็อกสุทธิเฉลี่ย <strong>${aggregateStockPercent}%</strong> | ยอดจำหน่ายสุทธิรวม <strong>${totalNetSalesVelocity.toLocaleString()} L/วัน</strong> | คัดถัง Outlier ออก <strong>${outlierTanksCount} ถัง</strong>
+                </span>
+            `;
+            calloutBox.style.display = 'block';
+        }
+
+        // จัดเรียง Priority: ถังปกติยอดขายสูงสุดมาก่อน (Outlier ตกไปอยู่ท้ายสุด)
         tankDemandList.sort((a, b) => {
+            if (a.isOutlier !== b.isOutlier) return a.isOutlier ? 1 : -1;
             if (b.sales !== a.sales) return b.sales - a.sales;
             return a.currentStockDays - b.currentStockDays;
         });
@@ -1453,10 +1534,11 @@
             let truck = availableFleet[tIdx];
             let isAdditionalTruck = (tIdx > 0);
 
-            if (isAdditionalTruck && (currentPriceTrend === 'down' || currentPriceTrend === 'safe')) {
-                let criticalTankExists = tankDemandList.some(item => item.minNeedToFill > 0 && item.currentStockDays <= 1.5);
+            // หากแนวโน้มราคาลง และปริมาณสต็อกสุทธิทั้งระบบยังเพียงพอ (>25%) จะไม่ปล่อยรถคันเสริม
+            if (isAdditionalTruck && currentPriceTrend === 'down') {
+                let criticalTankExists = tankDemandList.some(item => !item.isOutlier && item.minNeedToFill > 0 && item.currentStockDays <= 1.5);
                 if (!criticalTankExists) {
-                    weightComplianceNotes.push(`📉 คันที่ ${tIdx+1} (${truck.plate}): งดปล่อยรถเพิ่มตามแนวโน้มราคาลง/พอขาย เพื่อประหยัดต้นทุนค่าระวาง`);
+                    weightComplianceNotes.push(`📉 คันที่ ${tIdx+1} (${truck.plate}): งดปล่อยรถเพิ่มตามแนวโน้มราคาลงเพื่อประหยัดต้นทุนค่าระวาง`);
                     break;
                 }
             }
@@ -1470,7 +1552,7 @@
                 let assigned = false;
 
                 for (let item of tankDemandList) {
-                    if (item.minNeedToFill > 0 && item.roomInTank >= cap) {
+                    if (!item.isOutlier && item.minNeedToFill > 0 && item.roomInTank >= cap) {
                         trialAllocations.push({
                             tankItem: item,
                             compIdx: cIdx + 1,
@@ -1492,7 +1574,7 @@
                 if (!assigned && !isAdditionalTruck) {
                     let safeReduced = Math.max(0, cap - 1000);
                     for (let item of tankDemandList) {
-                        if (item.minNeedToFill > 0 && item.roomInTank >= safeReduced) {
+                        if (!item.isOutlier && item.minNeedToFill > 0 && item.roomInTank >= safeReduced) {
                             trialAllocations.push({
                                 tankItem: item,
                                 compIdx: cIdx + 1,
@@ -1578,6 +1660,7 @@
             }
         }
 
+        // สร้างตารางผลลัพธ์
         let tableBody = "";
         tankDemandList.forEach((item, index) => {
             let postVol = item.currVol + item.tankLoad;
@@ -1587,13 +1670,20 @@
             let daysBadgeColor = item.currentStockDays <= 2 ? "badge-danger" : (item.currentStockDays <= 4 ? "badge-warning" : "badge-success");
             let postBadgeColor = postStockDays >= targetDays ? "badge-success" : "badge-warning";
 
-            let allocContent = item.allocations.length > 0 
-                ? item.allocations.join('<br>') 
-                : `<span style="color:#777;">สต็อกพอสำหรับเกณฑ์ หรือ ติดพิกัดน้ำหนัก/นโยบายราคา</span>`;
+            let allocContent = "";
+            if (item.isOutlier) {
+                allocContent = `<span class="badge badge-outlier">🚫 หักออก (Outlier: ขายช้า/สต็อกล้น ${item.currentStockDays.toFixed(1)} วัน)</span>`;
+            } else if (item.allocations.length > 0) {
+                allocContent = item.allocations.join('<br>');
+            } else {
+                allocContent = `<span style="color:#777;">สต็อกพอสำหรับเกณฑ์ หรือ ติดพิกัดน้ำหนัก/นโยบายราคา</span>`;
+            }
 
             tableBody += `<tr>
                 <td style="text-align:center;">
-                    <span class="badge badge-priority">#${index + 1}</span>
+                    <span class="badge ${item.isOutlier ? 'badge-outlier' : 'badge-priority'}">
+                        ${item.isOutlier ? 'Outlier' : `#${index + 1}`}
+                    </span>
                 </td>
                 <td>
                     <strong>${item.stationName}</strong> - ถัง ${item.compIdx} (${item.type})<br>
@@ -1630,7 +1720,7 @@
         renderPastelTankGauges(selectedStops, timeStr, true);
 
         // =========================================================================
-        // 📐 ส่วนแสดงผล Advanced: สลับลำดับตามที่กำหนด (ตารางเมทริกซ์อยู่บนสุด / นิยามตัวแปรอยู่ล่างสุด)
+        // 📐 ส่วนแสดงผล Advanced: ตารางเมทริกซ์อยู่บนสุด / นิยามตัวแปรอยู่ล่างสุด
         // =========================================================================
         let advBox = document.getElementById('advanced_info');
         
@@ -1645,8 +1735,8 @@
             totalSalesSum += t.sales;
 
             matrixRowsHTML += `
-                <tr>
-                    <td><strong>p=${i+1}</strong></td>
+                <tr style="${t.isOutlier ? 'background:#fff1f2;' : ''}">
+                    <td><strong>p=${i+1}</strong> ${t.isOutlier ? '<span style="color:#b91c1c; font-size:10px;">[Outlier]</span>' : ''}</td>
                     <td>${t.stationName} (${t.type})</td>
                     <td>${t.sales.toLocaleString()}</td>
                     <td>${t.maxCap.toLocaleString()}</td>
@@ -1661,15 +1751,15 @@
             `;
         });
 
-        let objNumericTerms = tankDemandList.map((t, i) => `(${t.sales} \\cdot x_{${i+1}})`).join(' + ');
+        let objNumericTerms = tankDemandList.filter(t => !t.isOutlier).map((t, i) => `(${t.sales} \\cdot x_{${i+1}})`).join(' + ');
 
         advBox.innerHTML = `
             <h4 style="margin-top:0; color: #1e293b;">📐 แบบจำลองคณิตศาสตร์ Linear Optimization รวมทุกถัง (Holistic MILP Model & Constraints)</h4>
             <p style="color:#64748b; font-size:12.5px; margin-top:-6px;">
-                แบบจำลองรวมการตัดสินใจจัดสรรกองยานพาหนะและควบคุมสต็อกสินค้า (Multi-Vehicle Inventory Routing & Blending Model):
+                แบบจำลองรวมการตัดสินใจจัดสรรกองยานพาหนะ คัดกรองถังผิดปกติ (Outlier Filtering) และควบคุมสต็อกสินค้า:
             </p>
 
-            <!-- 1. ตารางเมทริกซ์พารามิเตอร์รวมทุกถัง (ย้ายขึ้นมาอยู่บนสุด) -->
+            <!-- 1. ตารางเมทริกซ์พารามิเตอร์รวมทุกถัง (อยู่บนสุด) -->
             <div class="calc-step-card">
                 <div class="calc-step-title">
                     <span>📋 ตารางเมทริกซ์พารามิเตอร์และตัวแปรตัดสินใจรวมทุกถังในภารกิจ (\\(p = 1, \\dots, P\\))</span>
@@ -1702,6 +1792,9 @@
                         </tr>
                     </tbody>
                 </table>
+                <div style="font-size:12px; color:#b91c1c; margin-top:6px;">
+                    * แถวสีแดงแสดงถังที่มีค่าต่ำผิดปกติ (Outlier) ซึ่งระบบคัดออกจากการคำนวณสั่งเติมเพื่อไม่ให้เกิดสต็อกล้น
+                </div>
             </div>
 
             <!-- 2. ฟังก์ชันเป้าหมายของระบบ -->
@@ -1709,11 +1802,11 @@
                 <div class="calc-step-title">
                     <span>🎯 1. ฟังก์ชันเป้าหมายของระบบ (Global Objective Function)</span>
                 </div>
-                มุ่งเน้นการจัดสรรน้ำมันลงในถังที่มีอัตราการจำหน่ายสูงสุดเพื่อเร่งรอบหมุนเวียนสต็อกสูงสุด พร้อมลดต้นทุนการปล่อยรถที่ไม่จำเป็น:<br>
-                $$\\max Z = \\sum_{p=1}^{P} \\left( Sales_p \\cdot x_p \\right) - \\sum_{v \\in \\mathcal{V}} \\left( F_v \\cdot u_v \\right)$$
+                มุ่งเน้นการจัดสรรน้ำมันลงในถังปกติที่มียอดขายสูงสุดเพื่อเร่งรอบหมุนเวียนสต็อก โดยหักถังที่เป็น Outlier ออก:<br>
+                $$\\max Z = \\sum_{p \\notin \\text{Outlier}} \\left( Sales_p \\cdot x_p \\right) - \\sum_{v \\in \\mathcal{V}} \\left( F_v \\cdot u_v \\right)$$
                 
                 <strong>แทนค่าสัมประสิทธิ์ตัวเลขจริงในระบบ:</strong><br>
-                $$\\max Z = ${objNumericTerms.length > 120 ? objNumericTerms.substring(0, 120) + ' + \\dots' : objNumericTerms} - ${dpFreightCost}(u_1) - ${dpFreightCost}(u_2)$$
+                $$\\max Z = ${objNumericTerms.length > 120 ? objNumericTerms.substring(0, 120) + ' + \\dots' : (objNumericTerms || '0')} - ${dpFreightCost}(u_1) - ${dpFreightCost}(u_2)$$
             </div>
 
             <!-- 3. ชุดข้อจำกัดของระบบ (System Constraints) -->
@@ -1722,19 +1815,22 @@
                     <span>⚙️ 2. ชุดข้อจำกัดของระบบ (System Constraints) & การแทนค่าอสมการ</span>
                 </div>
 
-                <strong>2.1 ข้อจำกัดความต้องการสต็อกปลอดภัยและไม่ล้นถัง (Demand & Ullage Constraints):</strong><br>
-                $$\\forall p \\in \\{1, \\dots, P\\}: \\quad Need_p \\le x_p \\le Room_p$$
+                <strong>2.1 ข้อจำกัดการคัดกรองถังผิดปกติ (Outlier Filtering Rule):</strong><br>
+                $$x_p = 0 \\quad \\forall p \\in \\text{Outlier} \\quad \\text{where } SD_p \\ge 15.0 \\text{ วัน หรือ } \\left(Sales_p < 300 \\land \\frac{Vol_p}{Cap_p} > 0.60\\right)$$<br>
+
+                <strong>2.2 ข้อจำกัดความต้องการสต็อกปลอดภัยและไม่ล้นถัง (Demand & Ullage Constraints):</strong><br>
+                $$\\forall p \\notin \\text{Outlier}: \\quad Need_p \\le x_p \\le Room_p$$
                 แทนค่าอสมการจริงทุกถัง (พิจารณาเกณฑ์ความจุถังเป้าหมาย ${(targetCapacityRatio*100).toFixed(0)}%):<br>
                 ${tankDemandList.map((t, i) => `\\(\\bullet \\quad \\text{ถัง } p=${i+1} \\, (${t.type}): \\quad \\mathbf{${t.minNeedToFill.toLocaleString()}} \\le x_{${i+1}} \\le \\mathbf{${t.roomInTank.toLocaleString()}} \\quad \\text{(จ่ายจริง } x_{${i+1}} = ${t.tankLoad.toLocaleString()}\\text{ L)}\\)`).join('<br>')}<br><br>
 
-                <strong>2.2 ข้อจำกัดความจุช่องบรรทุกแบบไม่กระฉอก (Slosh-Safe Compartment Allocation):</strong><br>
+                <strong>2.3 ข้อจำกัดความจุช่องบรรทุกแบบไม่กระฉอก (Slosh-Safe Compartment Allocation):</strong><br>
                 $$Load_{vc} = \\sum_{p=1}^{P} y_{vc}^{p} \\cdot \\left( V_{vc} - 1000 \\cdot s_{vc} \\right)$$
                 $$\\sum_{p=1}^{P} y_{vc}^{p} \\le 1, \\quad y_{vc}^{p} \\in \\{0, 1\\}, \\quad s_{vc} \\in \\{0, 1\\}$$<br>
 
-                <strong>2.3 ข้อจำกัดบังคับเต็มคันรถสำหรับรถที่เพิ่มเข้ามา (Strict Full-Capacity Rule):</strong><br>
+                <strong>2.4 ข้อจำกัดบังคับเต็มคันรถสำหรับรถที่เพิ่มเข้ามา (Strict Full-Capacity Rule):</strong><br>
                 $$\\sum_{c \\in \\mathcal{C}_v} Load_{vc} = \\text{MaxLegalPayload}_v \\cdot u_v \\quad \\forall v > 1$$<br>
 
-                <strong>2.4 ข้อจำกัดพิกัดน้ำหนักตามความหนาแน่นน้ำมัน (Axle-Load Weight Compliance):</strong><br>
+                <strong>2.5 ข้อจำกัดพิกัดน้ำหนักตามความหนาแน่นน้ำมัน (Axle-Load Weight Compliance):</strong><br>
                 $$V_{v}^{\\text{Diesel}} = \\sum_{p \\in \\text{Diesel}} x_{vp}, \\quad V_{v}^{\\text{Benzene}} = \\sum_{p \\in \\text{Benzene}} x_{vp}$$
                 $$\\begin{cases} 
                 V_{v}^{\\text{Diesel}} \\le 38,000 \\text{ L}, & \\text{ถ้า } V_{v}^{\\text{Benzene}} = 0 \\text{ L} \\\\[4pt]
@@ -1752,11 +1848,12 @@
                 </div>
                 - ปริมาณน้ำมันจัดส่งรวมทั้งสิ้น: \\( \\sum_{p=1}^{P} x_p = \\mathbf{${totalDispatched.toLocaleString()} \\text{ ลิตร}} \\)<br>
                 - จำนวนรถบรรทุกที่เปิดใช้งานจริง: \\( \\sum_{v} u_v = \\mathbf{${usedCount} \\text{ คัน}} \\) (${deployedTrucks.map(t=>t.plate).join(', ')})<br>
+                - จำนวนถังที่ถูกตัดออกเนื่องจากเป็น Outlier: <strong>${outlierTanksCount} ถัง</strong><br>
                 - ระยะทางขนส่งรวมทั้งสิ้น (Routing Distance): \\( \\mathbf{${totalDistance.toFixed(2)} \\text{ กิโลเมตร}} \\)<br>
                 - การประเมิน Lead Time คลังต้นทาง (${depot[1]}): <strong>${dpLeadTime} ชั่วโมง</strong> | ต้นทุนค่าระวางรวม: <strong>${(usedCount * dpFreightCost).toLocaleString()} บาท</strong>
             </div>
 
-            <!-- 5. นิยามและคำอธิบายตัวแปรทางคณิตศาสตร์ (ย้ายลงมาอยู่ล่างสุด) -->
+            <!-- 5. นิยามและคำอธิบายตัวแปรทางคณิตศาสตร์ (อยู่ล่างสุด) -->
             <div class="calc-step-card" style="border-left: 4px solid #6366f1;">
                 <div class="calc-step-title" style="color:#4338ca;">
                     <span>📖 4. นิยามและคำอธิบายตัวแปรทางคณิตศาสตร์ (Mathematical Nomenclature & Definitions)</span>
@@ -1942,6 +2039,38 @@
             alert('บันทึกข้อมูลคลังและค่าขนส่งสำเร็จ!');
             fetchDataFromSheets();
         } catch(err) { console.error(err); alert('บันทึกไม่สำเร็จ'); }
+    }
+
+    async function deleteDepotAction() {
+        let index = document.getElementById('db_depot_list').value;
+        if (index === "") return alert('กรุณาเลือกคลังที่ต้องการลบจาก Dropdown ก่อนครับ');
+
+        let row = depotData[index];
+        let dpName = row[1] || row[0];
+
+        if (!confirm(`⚠️ คุณแน่ใจหรือไม่ว่าต้องการลบคลัง [${dpName}] ออกจากฐานข้อมูล Google Sheets อย่างถาวร?`)) {
+            return;
+        }
+
+        depotData.splice(index, 1);
+        let rows = [["รหัสคลัง", "ชื่อคลัง", "Lat", "Lng", "LeadTime (ชม.)", "FreightCost (บาท)"]];
+        depotData.forEach(r => rows.push(r));
+
+        try {
+            await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId: SPREADSHEET_ID, range: 'Depots!A:F' });
+            await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: 'Depots!A1',
+                valueInputOption: 'USER_ENTERED',
+                resource: { values: rows }
+            });
+            alert(`✅ ลบคลัง [${dpName}] ออกจาก Google Sheets สำเร็จเรียบร้อย!`);
+            clearForm('dp');
+            fetchDataFromSheets();
+        } catch(err) {
+            console.error("Delete depot failed:", err);
+            alert("ลบคลังไม่สำเร็จ: " + (err.result?.error?.message || err.message));
+        }
     }
 
     function syncFromOptSelection(type) {
