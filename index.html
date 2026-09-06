@@ -255,15 +255,15 @@
                 <h4 class="plan-title">📊 แผนการโหลดและจ่ายน้ำมัน (ควบคุมพิกัดน้ำหนักกฎหมายขนส่ง)</h4>
             </div>
 
-            <!-- 🎛️ แผงควบคุมกลยุทธ์ 3 แถว (Weighted Stock Day Decision Rules) -->
+            <!-- 🎛️ แผงควบคุมกลยุทธ์ 3 แถว -->
             <div class="strategy-control-box">
                 <!-- แถวที่ 1: แนวโน้มราคาน้ำมัน (ลง / คงที่ / ขึ้น / ขึ้นชัวร์) -->
                 <div class="strategy-row">
                     <span class="strategy-label">📈 แถว 1: แนวโน้มราคาน้ำมัน</span>
                     <div class="trend-toggle-group">
-                        <button type="button" class="trend-btn down" onclick="setPriceTrend('down')">📉 ลง (ΔWSD ≤ 2.0 วัน)</button>
-                        <button type="button" class="trend-btn flat active" onclick="setPriceTrend('flat')">➡️ คงที่ (ΔWSD ≤ 1.0 วัน)</button>
-                        <button type="button" class="trend-btn up" onclick="setPriceTrend('up')">📈 ขึ้น (ΔWSD ≤ 0.5 วัน)</button>
+                        <button type="button" class="trend-btn down" onclick="setPriceTrend('down')">📉 ลง (ΔWSD > 2 วัน)</button>
+                        <button type="button" class="trend-btn flat active" onclick="setPriceTrend('flat')">➡️ คงที่ (ΔWSD > 1 วัน)</button>
+                        <button type="button" class="trend-btn up" onclick="setPriceTrend('up')">📈 ขึ้น (ΔWSD > 0.5 วัน)</button>
                         <button type="button" class="trend-btn sure" onclick="setPriceTrend('sure')">🚀 ขึ้นชัวร์ (เต็มความจุถัง)</button>
                     </div>
                 </div>
@@ -877,7 +877,6 @@
         document.getElementById('fleet_total_cap').innerText = totalFleetCap.toLocaleString();
     }
 
-    // Master Data
     function getTankSpecsJSON() {
         let specs = [];
         document.querySelectorAll('#compartments_area .comp-item').forEach(item => {
@@ -1161,7 +1160,6 @@
             }
         });
 
-        // ปรับสเกลแถว 3 ให้ครอบคลุม Stock Day สูงสุด
         let stockSlider = document.getElementById('scale_stock_days');
         if (stockSlider) {
             let newMax = Math.max(10, Math.ceil(maxSDInCurrentStation + 5));
@@ -1552,7 +1550,7 @@
             });
         });
 
-        // 🧠 ค่าเฉลี่ย Weighted Stock Day เริ่มต้นก่อนการจัดส่ง
+        // ค่าเฉลี่ย Weighted Stock Day เริ่มต้นก่อนการจัดส่ง
         let initialWeightedStockDays = totalNetSalesVelocity > 0 ? (totalNetInitialUsable / totalNetSalesVelocity) : 0;
         let aggregateStockPercent = totalNetCapacity > 0 ? ((totalNetInventory / totalNetCapacity) * 100).toFixed(1) : 0;
 
@@ -1577,7 +1575,7 @@
         let firstTruckDieselTotal = 0;
         let firstTruckBenzeneTotal = 0;
 
-        // วนลูปปล่อยรถทีละคันตามกฎถ่วงน้ำหนัก (Weighted Stock Day Decision Rules)
+        // วนลูปปล่อยรถทีละคันตามกฎถ่วงน้ำหนัก (เงื่อนไข "เพิ่มขึ้นเกินเกณฑ์")
         for (let tIdx = 0; tIdx < availableFleet.length; tIdx++) {
             let truck = availableFleet[tIdx];
             let isAdditionalTruck = (tIdx > 0);
@@ -1666,32 +1664,32 @@
                 }
             }
 
-            // 🧠 คำนวณ Sales-Weighted Stock Day จำลองหลังเพิ่มรถคันนี้
+            // คำนวณ Sales-Weighted Stock Day จำลองหลังเพิ่มรถคันนี้
             let simulatedAddedUsableVolume = trialAllocations.reduce((sum, a) => sum + (a.tankItem.isOutlier ? 0 : a.load), 0);
             let simulatedWeightedStockDays = totalNetSalesVelocity > 0 ? ((totalNetInitialUsable + totalDispatched + simulatedAddedUsableVolume) / totalNetSalesVelocity) : 0;
             let currentWeightedStockDays = totalNetSalesVelocity > 0 ? ((totalNetInitialUsable + totalDispatched) / totalNetSalesVelocity) : 0;
             let deltaWeightedStockDays = simulatedWeightedStockDays - currentWeightedStockDays;
 
-            // 🎯 กฎการตัดสินใจเพิ่มรถตามเงื่อนไขที่กำหนด:
+            // 🎯 กฎการตัดสินใจเพิ่มรถ: เพิ่มขึ้นเกินเกณฑ์จึงอนุญาตให้เพิ่มรถ
             let allowAdditionalTruck = true;
             if (isAdditionalTruck) {
                 if (currentPriceTrend === 'down') {
-                    // ลง: ค่าเฉลี่ย weighted stock day เพิ่มขึ้นไม่เกิน 2 วัน ให้เพิ่มรถ
-                    if (deltaWeightedStockDays > 2.0) {
+                    // ลง: ค่าเฉลี่ย weighted stock day เพิ่มขึ้นเกิน 2 วัน ให้เพิ่มรถ
+                    if (deltaWeightedStockDays <= 2.0) {
                         allowAdditionalTruck = false;
-                        weightComplianceNotes.push(`📉 [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (Weighted Stock Day เพิ่มขึ้น ${deltaWeightedStockDays.toFixed(2)} วัน เกินเกณฑ์ 2.0 วัน)`);
+                        weightComplianceNotes.push(`📉 [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (Weighted Stock Day เพิ่มขึ้น ${deltaWeightedStockDays.toFixed(2)} วัน ไม่เกิน 2.0 วัน)`);
                     }
                 } else if (currentPriceTrend === 'flat') {
-                    // คงที่: ค่าเฉลี่ย weighted stock day เพิ่มขึ้นไม่เกิน 1 วัน ให้เพิ่มรถ
-                    if (deltaWeightedStockDays > 1.0) {
+                    // คงที่: ค่าเฉลี่ย weighted stock day เพิ่มขึ้นเกิน 1 วัน ให้เพิ่มรถ
+                    if (deltaWeightedStockDays <= 1.0) {
                         allowAdditionalTruck = false;
-                        weightComplianceNotes.push(`➡️ [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (Weighted Stock Day เพิ่มขึ้น ${deltaWeightedStockDays.toFixed(2)} วัน เกินเกณฑ์ 1.0 วัน)`);
+                        weightComplianceNotes.push(`➡️ [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (Weighted Stock Day เพิ่มขึ้น ${deltaWeightedStockDays.toFixed(2)} วัน ไม่เกิน 1.0 วัน)`);
                     }
                 } else if (currentPriceTrend === 'up') {
-                    // ขึ้น: ค่าเฉลี่ย weighted stock day เพิ่มขึ้นไม่เกิน 0.5 วัน ให้เพิ่มรถ
-                    if (deltaWeightedStockDays > 0.5) {
+                    // ขึ้น: ค่าเฉลี่ย weighted stock day เพิ่มขึ้นเกิน 0.5 วัน ให้เพิ่มรถ
+                    if (deltaWeightedStockDays <= 0.5) {
                         allowAdditionalTruck = false;
-                        weightComplianceNotes.push(`📈 [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (Weighted Stock Day เพิ่มขึ้น ${deltaWeightedStockDays.toFixed(2)} วัน เกินเกณฑ์ 0.5 วัน)`);
+                        weightComplianceNotes.push(`📈 [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (Weighted Stock Day เพิ่มขึ้น ${deltaWeightedStockDays.toFixed(2)} วัน ไม่เกิน 0.5 วัน)`);
                     }
                 } else if (currentPriceTrend === 'sure') {
                     // ขึ้นชัวร์: ให้เพิ่มรถทุกคันเท่าที่ปริมาณความจุถังใต้ดินจะรับได้
@@ -1876,13 +1874,13 @@
 
                 <strong>2.1 สูตรคำนวณและกฎเกณฑ์ Sales-Weighted Stock Day (WSD):</strong><br>
                 $$WSD = \\frac{\\sum_{p \\notin Outlier} \\left( SD_p \\times Sales_p \\right)}{\\sum_{p \\notin Outlier} Sales_p} = \\frac{\\sum_{p \\notin Outlier} US_p}{\\sum_{p \\notin Outlier} Sales_p}$$
-                $$\\Delta WSD = WSD_{\\text{post}} - WSD_{\\text{pre}} \\le \\theta_{\\text{trend}}$$
-                โดยที่เงื่อนไขขีดจำกัดการเพิ่มขึ้นของสต็อกตามแนวโน้มราคาน้ำมัน (\\(\\theta_{\\text{trend}}\\)) คือ:<br>
+                $$\\Delta WSD = WSD_{\\text{post}} - WSD_{\\text{pre}} > \\theta_{\\text{trend}}$$
+                โดยที่เงื่อนไขการเพิ่มขึ้นของสต็อกตามแนวโน้มราคาน้ำมัน (\\(\\theta_{\\text{trend}}\\)) เพื่ออนุญาตให้เพิ่มรถคือ:<br>
                 $$\\begin{cases} 
-                \\Delta WSD \\le 2.0 \\text{ วัน}, & \\text{กรณีแนวโน้มราคาลง (Down Trend)} \\\\[4pt]
-                \\Delta WSD \\le 1.0 \\text{ วัน}, & \\text{กรณีแนวโน้มราคาคงที่ (Flat Trend)} \\\\[4pt]
-                \\Delta WSD \\le 0.5 \\text{ วัน}, & \\text{กรณีแนวโน้มราคาขึ้น (Up Trend)} \\\\[4pt]
-                \\text{เพิ่มเต็มความจุถัง (Unlimited)}, & \\text{กรณีแนวโน้มราคาขึ้นชัวร์ (Sure-Hike Trend)}
+                \\Delta WSD > 2.0 \\text{ วัน}, & \\text{กรณีแนวโน้มราคาลง (Down Trend) ให้เพิ่มรถ} \\\\[4pt]
+                \\Delta WSD > 1.0 \\text{ วัน}, & \\text{กรณีแนวโน้มราคาคงที่ (Flat Trend) ให้เพิ่มรถ} \\\\[4pt]
+                \\Delta WSD > 0.5 \\text{ วัน}, & \\text{กรณีแนวโน้มราคาขึ้น (Up Trend) ให้เพิ่มรถ} \\\\[4pt]
+                \\text{เพิ่มเต็มความจุถัง (Unlimited)}, & \\text{กรณีแนวโน้มราคาขึ้นชัวร์ (Sure-Hike Trend) ให้เพิ่มรถทุกคัน}
                 \\end{cases}$$<br>
 
                 <strong>2.2 ข้อจำกัดการคัดกรองถังผิดปกติ (Outlier Filtering Rule):</strong><br>
@@ -1958,7 +1956,7 @@
                         </tr>
                         <tr>
                             <td>\\( \\theta_{\\text{trend}} \\)</td>
-                            <td class="desc"><strong>เกณฑ์เพดานการเพิ่มขึ้นของสต็อกสูงสุดที่ยอมรับได้</strong> อิงตามแนวโน้มราคาน้ำมัน (ลง 2.0 / คงที่ 1.0 / ขึ้น 0.5 วัน)</td>
+                            <td class="desc"><strong>เกณฑ์เพดานการเพิ่มขึ้นของสต็อก</strong> อิงตามแนวโน้มราคาน้ำมัน (ลง 2.0 / คงที่ 1.0 / ขึ้น 0.5 วัน)</td>
                             <td class="unit">วัน</td>
                         </tr>
                         <tr>
