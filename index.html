@@ -115,9 +115,13 @@
         .badge-danger { background: #f8d7da; color: #721c24; }
         .badge-priority { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
         
+        /* 📐 สไตล์กล่องวิธีทำ Linear Optimization ระดับมืออาชีพ */
         .adv-box { margin-top: 15px; padding: 24px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13.5px; line-height: 1.8; color: #1e293b; }
-        .calc-step-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin: 12px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-        .calc-step-title { font-weight: 600; color: #0369a1; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .calc-step-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 20px; margin: 14px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
+        .calc-step-title { font-weight: 600; color: #0369a1; margin-bottom: 8px; font-size: 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; }
+        .model-matrix-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12.5px; }
+        .model-matrix-table th, .model-matrix-table td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: center; }
+        .model-matrix-table th { background-color: #f1f5f9; color: #334155; font-weight: 600; }
     </style>
 	
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
@@ -151,7 +155,7 @@
 
     <!-- MAIN TAB 1: Optimization (หน้าแรก) -->
     <div id="tab-result" class="tab-content active">
-        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Axle-Weight & Pure Diesel 38,000L Compliance)</h3>
+        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Linear Optimization with Density Constraints)</h3>
         <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">
             ระบบควบคุมพิกัดน้ำหนัก: <strong>ดีเซลล้วนทั้งคันบรรทุกได้สูงสุด 38,000L</strong> | หากมีเบนซิน 4,000L บรรทุกดีเซลได้ 35,000L | หากมีเบนซิน $\ge$ 8,000L บรรทุกเต็มพิกัด 40,000L
         </p>
@@ -234,7 +238,7 @@
                 <tbody id="res_table_body"></tbody>
             </table>
 
-            <button class="btn" style="margin-top: 25px; background-color: #e2e8f0; color: #475569;" onclick="toggleAdvancedInfo()">🔍 Advanced: แสดงสูตรและวิธีทำอย่างละเอียด (Mathematical Walkthrough)</button>
+            <button class="btn" style="margin-top: 25px; background-color: #e2e8f0; color: #475569;" onclick="toggleAdvancedInfo()">🔍 Advanced: แสดงวิธีทำรวมทุกถังแบบ Linear Optimization พร้อม Constraints (LaTeX)</button>
             
             <div id="advanced_info" class="adv-box" style="display:none;"></div>
         </div>
@@ -743,7 +747,6 @@
         document.getElementById('fleet_total_cap').innerText = totalFleetCap.toLocaleString();
     }
 
-    // Master Data
     function getTankSpecsJSON() {
         let specs = [];
         document.querySelectorAll('#compartments_area .comp-item').forEach(item => {
@@ -1251,7 +1254,7 @@
     }
 
     // =========================================================================
-    // ⚙️ อัลกอริทึมจัดสรร + แสดงสูตรและวิธีทำอย่างละเอียด (Step-by-Step LaTeX)
+    // ⚙️ อัลกอริทึมจัดสรร + แสดงวิธีทำ Linear Optimization รวมทุกถัง
     // =========================================================================
     function calculateAxleDensityCompliantOptimization(selectedStops, selectedDepotIndex, targetDays) {
         let depot = depotData[selectedDepotIndex];
@@ -1298,7 +1301,7 @@
             }
         }
 
-        // 3. เตรียมรายการถัง
+        // 3. เตรียมรายการถังทั้งหมด (Global Tanks Matrix)
         let tankDemandList = [];
         selectedStops.forEach((st) => {
             st.tanks.forEach((tank, compIdx) => {
@@ -1338,13 +1341,13 @@
             });
         });
 
-        // จัดเรียงตามยอดขายสูงสุดก่อน
+        // จัดเรียง Priority ตามยอดขายสูงสุดก่อน
         tankDemandList.sort((a, b) => {
             if (b.sales !== a.sales) return b.sales - a.sales;
             return a.currentStockDays - b.currentStockDays;
         });
 
-        // 4. จัดสรรช่องรถ พร้อมกฎ Axle-Load (ดีเซลล้วนได้ 38,000L)
+        // 4. จัดสรรช่องรถ พร้อมกฎ Axle-Load
         let deployedTrucks = [];
         let totalDispatched = 0;
         let weightComplianceNotes = [];
@@ -1407,7 +1410,6 @@
                 }
             });
 
-            // ตรวจสอบกฎหมายพิกัดน้ำหนัก
             let weightViolation = false;
             let allowedMaxDiesel = 40000;
 
@@ -1527,69 +1529,137 @@
         renderPastelTankGauges(selectedStops, timeStr, true);
 
         // =========================================================================
-        // 📐 ส่วนแสดงสูตรและวิธีทำอย่างละเอียด (Step-by-Step Mathematical Walkthrough)
+        // 📐 แสดงสูตรและวิธีทำรวมกันทุกถังแบบ Linear Optimization พร้อม Constraints
         // =========================================================================
         let advBox = document.getElementById('advanced_info');
         
-        // สร้างบล็อกแสดงวิธีทำของแต่ละถัง
-        let stepByStepHTML = "";
-        tankDemandList.forEach((t, idx) => {
-            stepByStepHTML += `
-                <div class="calc-step-card">
-                    <div class="calc-step-title">
-                        <span>ถังที่ ${idx + 1}: [${t.stationName}] ผลิตภัณฑ์ ${t.type} (Priority #${idx + 1})</span>
-                    </div>
-                    <strong>1. พารามิเตอร์ตั้งต้น:</strong> 
-                    \\( Cap = ${t.maxCap.toLocaleString()} \\text{ L}, \\, Vol = ${t.currVol.toLocaleString()} \\text{ L}, \\, Sales = ${t.sales.toLocaleString()} \\text{ L/วัน}, \\, T_{target} = ${targetDays} \\text{ วัน} \\)<br>
-                    
-                    <strong>2. คำนวณ Dead Stock (10%):</strong><br>
-                    $$DS = 0.10 \\times Cap = 0.10 \\times ${t.maxCap.toLocaleString()} = \\mathbf{${t.deadStock.toLocaleString()} \\text{ L}}$$
+        // ตารางเมทริกซ์รวมทุกถัง
+        let matrixRowsHTML = "";
+        let totalNeedSum = 0;
+        let totalRoomSum = 0;
+        let totalSalesSum = 0;
 
-                    <strong>3. คำนวณ Usable Stock (ปริมาณน้ำมันใช้ได้จริงก่อนเติม):</strong><br>
-                    $$US = \\max(0, \\, Vol - DS) = \\max(0, \\, ${t.currVol.toLocaleString()} - ${t.deadStock.toLocaleString()}) = \\mathbf{${t.usableStock.toLocaleString()} \\text{ L}}$$
+        tankDemandList.forEach((t, i) => {
+            totalNeedSum += t.minNeedToFill;
+            totalRoomSum += t.roomInTank;
+            totalSalesSum += t.sales;
 
-                    <strong>4. คำนวณ Stock Days คงเหลือเดิม:</strong><br>
-                    $$SD = \\frac{US}{Sales} = \\frac{${t.usableStock.toLocaleString()}}{${t.sales.toLocaleString()}} = \\mathbf{${t.currentStockDays.toFixed(2)} \\text{ วัน}}$$
-
-                    <strong>5. คำนวณเป้าหมายระดับน้ำมันปลอดภัย & ปริมาณต้องการเติม:</strong><br>
-                    $$TargetVol = \\min\\big(Cap, \\, DS + (Sales \\times T_{target})\\big)$$
-                    $$TargetVol = \\min\\big(${t.maxCap.toLocaleString()}, \\, ${t.deadStock.toLocaleString()} + (${t.sales.toLocaleString()} \\times ${targetDays})\\big) = \\mathbf{${t.targetCapLimit.toLocaleString()} \\text{ L}}$$
-                    $$Need = \\max(0, \\, TargetVol - Vol) = \\max(0, \\, ${t.targetCapLimit.toLocaleString()} - ${t.currVol.toLocaleString()}) = \\mathbf{${t.minNeedToFill.toLocaleString()} \\text{ L}}$$
-                    $$Room = Cap - Vol = ${t.maxCap.toLocaleString()} - ${t.currVol.toLocaleString()} = \\mathbf{${t.roomInTank.toLocaleString()} \\text{ L}} \\quad \\text{(พื้นที่ว่างรับได้)}$$<br>
-
-                    <strong>6. ผลการจัดสรรลงรถ:</strong> ได้รับจัดสรรจริง = <strong>${t.tankLoad.toLocaleString()} ลิตร</strong> 
-                    \\( \\rightarrow \\) Stock Days หลังเติม = <strong>${((Math.max(0, t.currVol + t.tankLoad - t.deadStock)) / (t.sales || 1)).toFixed(2)} วัน</strong>
-                </div>
+            matrixRowsHTML += `
+                <tr>
+                    <td><strong>p=${i+1}</strong></td>
+                    <td>${t.stationName} (${t.type})</td>
+                    <td>${t.sales.toLocaleString()}</td>
+                    <td>${t.maxCap.toLocaleString()}</td>
+                    <td>${t.currVol.toLocaleString()}</td>
+                    <td>${t.deadStock.toLocaleString()}</td>
+                    <td>${t.usableStock.toLocaleString()}</td>
+                    <td>${t.currentStockDays.toFixed(1)}</td>
+                    <td><strong style="color:#b91c1c;">${t.minNeedToFill.toLocaleString()}</strong></td>
+                    <td><strong style="color:#059669;">${t.roomInTank.toLocaleString()}</strong></td>
+                    <td><strong style="color:#0369a1;">${t.tankLoad.toLocaleString()}</strong></td>
+                </tr>
             `;
         });
 
-        // สรุปวิธีทำในส่วนน้ำหนักตามกฎหมาย
-        let weightWalkthroughHTML = `
-            <div class="calc-step-card" style="border-left: 4px solid #0284c7;">
-                <div class="calc-step-title">
-                    <span>⚖️ วิธีทำ: การตรวจสอบพิกัดน้ำหนักตามกฎหมายขนส่ง (Axle-Load Compliance)</span>
-                </div>
-                <strong>ผลรวมปริมาตรบนรถคันหลัก:</strong><br>
-                - ปริมาตรดีเซลรวม: \\( V^{\\text{Diesel}} = \\mathbf{${firstTruckDieselTotal.toLocaleString()} \\text{ L}} \\)<br>
-                - ปริมาตรเบนซินรวม: \\( V^{\\text{Benzene}} = \\mathbf{${firstTruckBenzeneTotal.toLocaleString()} \\text{ L}} \\)<br><br>
-                
-                <strong>การแทนค่าเงื่อนไขควบคุมน้ำหนัก:</strong><br>
-                ${
-                    firstTruckBenzeneTotal === 0 
-                    ? `$$\\because V^{\\text{Benzene}} = 0 \\implies V^{\\text{Diesel}} \\le 38,000 \\text{ L} \\quad \\text{(ตรวจสอบ: } ${firstTruckDieselTotal.toLocaleString()} \\le 38,000 \\text{ L} \\rightarrow \\mathbf{\\text{ผ่านเกณฑ์ดีเซลล้วน}})$$`
-                    : (firstTruckBenzeneTotal >= 4000 && firstTruckBenzeneTotal < 8000
-                        ? `$$\\because 4,000 \\le V^{\\text{Benzene}} < 8,000 \\implies V^{\\text{Diesel}} \\le 35,000 \\text{ L} \\quad (\\text{ตรวจสอบ: } ${firstTruckDieselTotal.toLocaleString()} \\le 35,000 \\text{ L} \\rightarrow \\mathbf{\\text{ผ่านเกณฑ์ลด 1,000L}})$$`
-                        : `$$\\because V^{\\text{Benzene}} \\ge 8,000 \\implies V^{\\text{Diesel}} \\le 32,000 \\text{ L} \\quad (\\text{ตรวจสอบ: } V_{\\text{Total}} = ${(firstTruckDieselTotal + firstTruckBenzeneTotal).toLocaleString()} \\le 40,000 \\text{ L} \\rightarrow \\mathbf{\\text{ผ่านเกณฑ์เต็มพิกัด}})$$`
-                    )
-                }
-            </div>
-        `;
+        // สร้างสมการ Objective Function เชิงตัวเลข
+        let objNumericTerms = tankDemandList.map((t, i) => `(${t.sales} \\cdot x_{${i+1}})`).join(' + ');
 
         advBox.innerHTML = `
-            <h4 style="margin-top:0; color: #1e293b;">📐 แบบจำลองคณิตศาสตร์ และ แสดงวิธีทำแทนค่าตัวแปรจริง (LaTeX Mathematical Walkthrough)</h4>
-            <p style="color:#64748b; font-size:12.5px;">รายละเอียดการแปลงสมการและการแทนค่าตัวแปรจริงทีละขั้นตอนตามหลัก Operations Research:</p>
-            ${stepByStepHTML}
-            ${weightWalkthroughHTML}
+            <h4 style="margin-top:0; color: #1e293b;">📐 แบบจำลองคณิตศาสตร์ Linear Optimization รวมทุกถัง (Holistic MILP Model & Constraints)</h4>
+            <p style="color:#64748b; font-size:12.5px; margin-top:-6px;">
+                แบบจำลองรวมการตัดสินใจจัดสรรกองยานพาหนะและควบคุมสต็อกสินค้า (Multi-Vehicle Inventory Routing & Blending Model):
+            </p>
+
+            <!-- กล่องที่ 1: ตารางสรุปพารามิเตอร์รวมทุกถังในระบบ -->
+            <div class="calc-step-card">
+                <div class="calc-step-title">
+                    <span>📋 ตารางเมทริกซ์พารามิเตอร์และตัวแปรตัดสินใจรวมทุกถังในภารกิจ (\\(p = 1, \\dots, P\\))</span>
+                </div>
+                <table class="model-matrix-table">
+                    <thead>
+                        <tr>
+                            <th>ถัง (p)</th>
+                            <th>สถานี (ชนิด)</th>
+                            <th>\\(Sales_p\\)</th>
+                            <th>\\(Cap_p\\)</th>
+                            <th>\\(Vol_p\\)</th>
+                            <th>\\(DS_p\\)</th>
+                            <th>\\(US_p\\)</th>
+                            <th>\\(SD_p\\)</th>
+                            <th>\\(Need_p\\)</th>
+                            <th>\\(Room_p\\)</th>
+                            <th>จัดส่งจริง (\\(x_p\\))</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${matrixRowsHTML}
+                        <tr style="background:#f8fafc; font-weight:bold;">
+                            <td colspan="2">ผลรวมทั้งระบบ (\\(\\Sigma\\))</td>
+                            <td>${totalSalesSum.toLocaleString()}</td>
+                            <td colspan="5">-</td>
+                            <td style="color:#b91c1c;">${totalNeedSum.toLocaleString()} L</td>
+                            <td style="color:#059669;">${totalRoomSum.toLocaleString()} L</td>
+                            <td style="color:#0369a1;">${totalDispatched.toLocaleString()} L</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- กล่องที่ 2: ฟังก์ชันเป้าหมายและวิธีทำแทนค่า -->
+            <div class="calc-step-card">
+                <div class="calc-step-title">
+                    <span>🎯 1. ฟังก์ชันเป้าหมายของระบบ (Global Objective Function)</span>
+                </div>
+                มุ่งเน้นการจัดสรรน้ำมันลงในถังที่มีอัตราการจำหน่ายสูงสุดเพื่อเร่งรอบหมุนเวียนสต็อกสูงสุด พร้อมลดต้นทุนการปล่อยรถที่ไม่จำเป็น:<br>
+                $$\\max Z = \\sum_{p=1}^{P} \\left( Sales_p \\cdot x_p \\right) - \\sum_{v \\in \\mathcal{V}} \\left( F_v \\cdot u_v \\right)$$
+                
+                <strong>แทนค่าสัมประสิทธิ์ตัวเลขจริงในระบบ:</strong><br>
+                $$\\max Z = ${objNumericTerms.length > 120 ? objNumericTerms.substring(0, 120) + ' + \\dots' : objNumericTerms} - 50000(u_1) - 50000(u_2)$$
+                <em>โดยที่ \\(x_p\\) คือปริมาณน้ำมันที่จ่ายให้ถัง \\(p\\) (ลิตร) และ \\(u_v \\in \\{0, 1\\}\\) คือตัวแปรระบุการเปิดใช้งานรถคันที่ \\(v\\)</em>
+            </div>
+
+            <!-- กล่องที่ 3: ข้อจำกัดทางคณิตศาสตร์ทั้งหมด (Constraints) -->
+            <div class="calc-step-card">
+                <div class="calc-step-title">
+                    <span>⚙️ 2. ชุดข้อจำกัดของระบบ (System Constraints) & การแทนค่าอสมการ</span>
+                </div>
+
+                <strong>2.1 ข้อจำกัดความต้องการสต็อกปลอดภัยและไม่ล้นถัง (Demand & Ullage Constraints):</strong><br>
+                $$\\forall p \\in \\{1, \\dots, P\\}: \\quad Need_p \\le x_p \\le Room_p$$
+                แทนค่าอสมการจริงทุกถัง:<br>
+                ${tankDemandList.map((t, i) => `\\(\\bullet \\quad \\text{ถัง } p=${i+1} \\, (${t.type}): \\quad \\mathbf{${t.minNeedToFill.toLocaleString()}} \\le x_{${i+1}} \\le \\mathbf{${t.roomInTank.toLocaleString()}} \\quad \\text{(จ่ายจริง } x_{${i+1}} = ${t.tankLoad.toLocaleString()}\\text{ L)}\\)`).join('<br>')}<br><br>
+
+                <strong>2.2 ข้อจำกัดความจุช่องบรรทุกแบบไม่กระฉอก (Slosh-Safe Compartment Allocation):</strong><br>
+                ปริมาณน้ำมันในแต่ละช่องบรรทุก \\(c\\) ของรถ \\(v\\) ต้องเป็นไปตามเงื่อนไข:<br>
+                $$Load_{vc} = \\sum_{p=1}^{P} y_{vc}^{p} \\cdot \\left( V_{vc} - 1000 \\cdot s_{vc} \\right)$$
+                $$\\sum_{p=1}^{P} y_{vc}^{p} \\le 1, \\quad y_{vc}^{p} \\in \\{0, 1\\}, \\quad s_{vc} \\in \\{0, 1\\}$$
+                <em>(แต่ละช่องบรรทุก \\(c\\) ขนาด \\(V_{vc}\\) อนุญาตให้จ่ายได้เพียง 1 ถัง และเลือกจ่ายได้เฉพาะเต็มช่องหรือลด 1,000L เท่านั้น)</em><br><br>
+
+                <strong>2.3 ข้อจำกัดบังคับเต็มคันรถสำหรับรถที่เพิ่มเข้ามา (Strict Full-Capacity Rule):</strong><br>
+                $$\\sum_{c \\in \\mathcal{C}_v} Load_{vc} = \\text{Capacity}_v \\cdot u_v \\quad \\forall v > 1$$
+                แทนค่าจริงสำหรับรถคันเสริม (คันที่ 2):<br>
+                $$\\sum Load_{2, c} = 16,000 \\cdot u_2 \\quad \\implies \\text{หาก } u_2=1 \\text{ จะต้องบรรทุกครบ } 16,000\\text{ ลิตรเต็มคันเท่านั้น}$$<br>
+
+                <strong>2.4 ข้อจำกัดพิกัดน้ำหนักตามความหนาแน่นน้ำมัน (Axle-Load Weight Compliance):</strong><br>
+                $$V_{v}^{\\text{Diesel}} = \\sum_{p \\in \\text{Diesel}} x_{vp}, \\quad V_{v}^{\\text{Benzene}} = \\sum_{p \\in \\text{Benzene}} x_{vp}$$
+                $$\\begin{cases} 
+                V_{v}^{\\text{Diesel}} \\le 38,000 \\text{ L}, & \\text{ถ้า } V_{v}^{\\text{Benzene}} = 0 \\text{ L} \\\\[4pt]
+                V_{v}^{\\text{Diesel}} \\le 35,000 \\text{ L}, & \\text{ถ้า } 4,000 \\le V_{v}^{\\text{Benzene}} < 8,000 \\text{ L} \\\\[4pt]
+                V_{v}^{\\text{Diesel}} \\le 32,000 \\text{ L}, & \\text{ถ้า } V_{v}^{\\text{Benzene}} \\ge 8,000 \\text{ L}
+                \\end{cases}$$
+                แทนค่าจริงบนรถคันหลัก (คันที่ 1):<br>
+                $$\\text{ตรวจสอบ: } V_1^{\\text{Diesel}} = \\mathbf{${firstTruckDieselTotal.toLocaleString()}\\text{ L}}, \\quad V_1^{\\text{Benzene}} = \\mathbf{${firstTruckBenzeneTotal.toLocaleString()}\\text{ L}} \\quad \\implies \\mathbf{\\text{ผ่านเกณฑ์พิกัดน้ำหนักตามกฎหมาย}}$$
+            </div>
+
+            <!-- กล่องที่ 4: สรุปผลลัพธ์เชิงตัวเลขของระบบ -->
+            <div class="calc-step-card" style="border-left: 4px solid #10b981;">
+                <div class="calc-step-title" style="color:#065f46;">
+                    <span>✅ 3. ผลลัพธ์การหาค่าเหมาะที่สุดของระบบ (Global Optimal Solution)</span>
+                </div>
+                - ปริมาณน้ำมันจัดส่งรวมทั้งสิ้น: \\( \\sum_{p=1}^{P} x_p = \\mathbf{${totalDispatched.toLocaleString()} \\text{ ลิตร}} \\)<br>
+                - จำนวนรถบรรทุกที่เปิดใช้งานจริง: \\( \\sum_{v} u_v = \\mathbf{${usedCount} \\text{ คัน}} \\) (${deployedTrucks.map(t=>t.plate).join(', ')})<br>
+                - ระยะทางขนส่งรวมทั้งสิ้น (Routing Distance): \\( \\mathbf{${totalDistance.toFixed(2)} \\text{ กิโลเมตร}} \\)
+            </div>
         `;
 
         if (window.MathJax) {
