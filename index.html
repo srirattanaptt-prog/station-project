@@ -46,7 +46,7 @@
         .plan-header-row { margin: 25px 0 12px 0; }
         .plan-title { margin: 0; font-size: 16px; color: #1e293b; }
 
-        /* แผงควบคุมกลยุทธ์ 3 แถว (Triple-Tier Strategy Panel) */
+        /* แผงควบคุมกลยุทธ์ 3 แถว */
         .strategy-control-box { background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 20px; margin-bottom: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
         .strategy-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #f1f5f9; gap: 15px; flex-wrap: wrap; }
         .strategy-row:last-child { border-bottom: none; }
@@ -186,9 +186,9 @@
 
     <!-- MAIN TAB 1: Optimization (หน้าแรก) -->
     <div id="tab-result" class="tab-content active">
-        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Smart Density & Outlier-Filtering Model)</h3>
+        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Sales-Weighted Stock Day & Price Trend Model)</h3>
         <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">
-            ระบบควบคุมพิกัดน้ำหนัก: <strong>ดีเซลล้วนได้สูงสุด 38,000L</strong> | เบนซิน 4,000L โหลดดีเซลได้ 35,000L | เบนซิน $\ge$ 8,000L โหลดเต็มพิกัด 40,000L พร้อมตัดถัง Outlier อัตโนมัติ
+            ระบบควบคุมพิกัดน้ำหนัก: <strong>ดีเซลล้วนได้สูงสุด 38,000L</strong> | เบนซิน 4,000L โหลดดีเซลได้ 35,000L | เบนซิน $\ge$ 8,000L โหลดเต็มพิกัด 40,000L พร้อมคัดกรอง Outlier อัตโนมัติ
         </p>
         
         <div class="control-panel">
@@ -255,16 +255,16 @@
                 <h4 class="plan-title">📊 แผนการโหลดและจ่ายน้ำมัน (ควบคุมพิกัดน้ำหนักกฎหมายขนส่ง)</h4>
             </div>
 
-            <!-- 🎛️ กล่องควบคุมกลยุทธ์ 3 แถว (Triple-Tier Strategy Controls) -->
+            <!-- 🎛️ แผงควบคุมกลยุทธ์ 3 แถว (Weighted Stock Day Decision Rules) -->
             <div class="strategy-control-box">
                 <!-- แถวที่ 1: แนวโน้มราคาน้ำมัน (ลง / คงที่ / ขึ้น / ขึ้นชัวร์) -->
                 <div class="strategy-row">
                     <span class="strategy-label">📈 แถว 1: แนวโน้มราคาน้ำมัน</span>
                     <div class="trend-toggle-group">
-                        <button type="button" class="trend-btn down" onclick="setPriceTrend('down')">📉 ลง</button>
-                        <button type="button" class="trend-btn flat active" onclick="setPriceTrend('flat')">➡️ คงที่</button>
-                        <button type="button" class="trend-btn up" onclick="setPriceTrend('up')">📈 ขึ้น</button>
-                        <button type="button" class="trend-btn sure" onclick="setPriceTrend('sure')">🚀 ขึ้นชัวร์</button>
+                        <button type="button" class="trend-btn down" onclick="setPriceTrend('down')">📉 ลง (ΔWSD ≤ 2.0 วัน)</button>
+                        <button type="button" class="trend-btn flat active" onclick="setPriceTrend('flat')">➡️ คงที่ (ΔWSD ≤ 1.0 วัน)</button>
+                        <button type="button" class="trend-btn up" onclick="setPriceTrend('up')">📈 ขึ้น (ΔWSD ≤ 0.5 วัน)</button>
+                        <button type="button" class="trend-btn sure" onclick="setPriceTrend('sure')">🚀 ขึ้นชัวร์ (เต็มความจุถัง)</button>
                     </div>
                 </div>
 
@@ -287,7 +287,7 @@
                 </div>
             </div>
 
-            <!-- กล่องแสดงข้อเสนอแนะเชิงกลยุทธ์ตามแนวโน้มราคาและการตัด Outlier -->
+            <!-- กล่องแสดงข้อเสนอแนะเชิงกลยุทธ์ตาม Weighted Stock Day และการตัด Outlier -->
             <div id="smart_strategy_callout" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px 16px; margin-bottom:15px; font-size:13px; color:#166534; display:none;"></div>
 
             <table class="result-table">
@@ -494,14 +494,14 @@
         return name.includes("G95") || name.includes("G91") || name.includes("E20") || name.includes("E85") || name.includes("ULG") || name.includes("BENZENE") || name.includes("เบนซิน") || name.includes("แก๊สโซฮอล์");
     }
 
-    // ฟังก์ชันสลับปุ่มเลือกแนวโน้มราคาน้ำมัน
+    // ฟังก์ชันสลับปุ่มเลือกแนวโน้มราคาน้ำมัน (แถวที่ 1)
     function setPriceTrend(trend) {
         currentPriceTrend = trend;
         document.querySelectorAll('.trend-btn').forEach(b => b.classList.remove('active'));
         let targetBtn = document.querySelector(`.trend-btn.${trend}`);
         if (targetBtn) targetBtn.classList.add('active');
 
-        // ปรับค่าสเกลความจุถังตามแนวโน้มราคาโดยอัตโนมัติ
+        // ปรับค่าสเกลความจุถัง (แถวที่ 2) ตามแนวโน้มราคาโดยอัตโนมัติ
         let capSlider = document.getElementById('scale_tank_capacity');
         if (trend === 'down') capSlider.value = 25;
         else if (trend === 'flat') capSlider.value = 50;
@@ -510,13 +510,11 @@
         updateCapacitySlider(capSlider.value);
     }
 
-    // ฟังก์ชันอัปเดตสเกลความจุถัง (10% - 100%)
     function updateCapacitySlider(val) {
         document.getElementById('tag_tank_capacity').innerText = `${val}%`;
         triggerAutoRecalculate();
     }
 
-    // ฟังก์ชันอัปเดตสเกล Stock Day
     function updateStockDaysSlider(val) {
         document.getElementById('tag_stock_days').innerText = `${parseFloat(val).toFixed(1)} วัน`;
         triggerAutoRecalculate();
@@ -879,6 +877,7 @@
         document.getElementById('fleet_total_cap').innerText = totalFleetCap.toLocaleString();
     }
 
+    // Master Data
     function getTankSpecsJSON() {
         let specs = [];
         document.querySelectorAll('#compartments_area .comp-item').forEach(item => {
@@ -1162,7 +1161,7 @@
             }
         });
 
-        // ปรับขอบเขตสเกลของแถวที่ 3 (Max Stock Day Slider) ให้ยืดหยุ่นตามถังที่เลือก
+        // ปรับสเกลแถว 3 ให้ครอบคลุม Stock Day สูงสุด
         let stockSlider = document.getElementById('scale_stock_days');
         if (stockSlider) {
             let newMax = Math.max(10, Math.ceil(maxSDInCurrentStation + 5));
@@ -1441,7 +1440,7 @@
     }
 
     // =========================================================================
-    // ⚙️ อัลกอริทึม Smart Predictive Dispatching & Price Trend Optimization
+    // ⚙️ อัลกอริทึม Sales-Weighted Stock Day & Dynamic Trend Dispatching
     // =========================================================================
     function calculateAxleDensityCompliantOptimization(selectedStops, selectedDepotIndex, targetDays) {
         let depot = depotData[selectedDepotIndex];
@@ -1489,17 +1488,16 @@
             }
         }
 
-        // ดึงค่าสัดส่วนความจุเป้าหมายจาก Slider แถว 2 (10% - 100%)
+        // ดึงสัดส่วนความจุถังเป้าหมายจาก Slider แถว 2 (10% - 100%)
         let targetCapacityRatio = (parseFloat(document.getElementById('scale_tank_capacity').value) || 50) / 100;
 
-        // คำนวณภาพรวมทั้งสถานี (Holistic Analysis & Outlier Detection)
+        // คำนวณภาพรวมระบบ & Sales-Weighted Stock Day
         let tankDemandList = [];
         let outlierTanksCount = 0;
         let totalNetCapacity = 0;
         let totalNetInventory = 0;
         let totalNetSalesVelocity = 0;
-        let baseUsableStockDaysSum = 0;
-        let validTanksCount = 0;
+        let totalNetInitialUsable = 0;
 
         selectedStops.forEach((st) => {
             st.tanks.forEach((tank, compIdx) => {
@@ -1510,7 +1508,7 @@
                 let usableStock = Math.max(0, currVol - deadStock);
                 let currentStockDays = sales > 0 ? (usableStock / sales) : 99;
 
-                // ตรวจจับ Outlier: สต็อกล้นแต่ขายไม่ดี
+                // ตรวจจับ Outlier
                 let isOutlier = (currentStockDays >= 15.0) || (sales < 300 && (currVol / maxCap) > 0.60);
 
                 if (isOutlier) {
@@ -1519,15 +1517,13 @@
                     totalNetCapacity += maxCap;
                     totalNetInventory += currVol;
                     totalNetSalesVelocity += sales;
-                    baseUsableStockDaysSum += currentStockDays;
-                    validTanksCount++;
+                    totalNetInitialUsable += usableStock;
                 }
 
                 let minDaysVol = (sales > 0) ? Math.round(deadStock + (sales * targetDays)) : 0;
                 let trendCapVol = Math.round(maxCap * targetCapacityRatio);
                 let targetCapLimit = Math.min(maxCap, Math.max(minDaysVol, trendCapVol));
                 
-                // หากเป็น Outlier ให้ตัดออกจากการสั่งเติมรอบนี้ทันที
                 let minNeedToFill = isOutlier ? 0 : Math.max(0, targetCapLimit - currVol);
                 let roomInTank = maxCap - currVol;
 
@@ -1556,8 +1552,17 @@
             });
         });
 
-        // คำนวณค่าเฉลี่ย Stock Day ก่อนเติม (เฉพาะถังปกติ)
-        let initialAvgStockDays = validTanksCount > 0 ? (baseUsableStockDaysSum / validTanksCount) : 0;
+        // 🧠 ค่าเฉลี่ย Weighted Stock Day เริ่มต้นก่อนการจัดส่ง
+        let initialWeightedStockDays = totalNetSalesVelocity > 0 ? (totalNetInitialUsable / totalNetSalesVelocity) : 0;
+        let aggregateStockPercent = totalNetCapacity > 0 ? ((totalNetInventory / totalNetCapacity) * 100).toFixed(1) : 0;
+
+        let calloutBox = document.getElementById('smart_strategy_callout');
+        if (calloutBox) {
+            calloutBox.innerHTML = `
+                📊 <strong>ตัวชี้วัดสถานะสต็อก:</strong> Weighted Stock Day รวมก่อนเติม = <strong>${initialWeightedStockDays.toFixed(2)} วัน</strong> | ปริมาณสต็อกสุทธิ = <strong>${aggregateStockPercent}%</strong> | ยอดจำหน่ายสุทธิ = <strong>${totalNetSalesVelocity.toLocaleString()} L/วัน</strong>
+            `;
+            calloutBox.style.display = 'block';
+        }
 
         // จัดเรียง Priority: ถังปกติยอดขายสูงสุดมาก่อน
         tankDemandList.sort((a, b) => {
@@ -1572,12 +1577,11 @@
         let firstTruckDieselTotal = 0;
         let firstTruckBenzeneTotal = 0;
 
-        // วนลูปปล่อยรถทีละคันตามกฎแนวโน้มราคาน้ำมัน (ลง / คงที่ / ขึ้น / ขึ้นชัวร์)
+        // วนลูปปล่อยรถทีละคันตามกฎถ่วงน้ำหนัก (Weighted Stock Day Decision Rules)
         for (let tIdx = 0; tIdx < availableFleet.length; tIdx++) {
             let truck = availableFleet[tIdx];
             let isAdditionalTruck = (tIdx > 0);
 
-            // จำลองจัดสรร
             let trialAllocations = [];
             let truckLoadedTotal = 0;
             let truckDieselTotal = 0;
@@ -1662,42 +1666,36 @@
                 }
             }
 
-            // คำนวณ Stock Day เฉลี่ยที่เพิ่มขึ้นหากปล่อยรถคันนี้
-            let tempSimulatedStockDaysSum = 0;
-            tankDemandList.forEach(item => {
-                if (!item.isOutlier) {
-                    let allocatedThisRound = trialAllocations.filter(a => a.tankItem === item).reduce((s, a) => s + a.load, 0);
-                    let simVol = item.currVol + item.tankLoad + allocatedThisRound;
-                    let simUsable = Math.max(0, simVol - item.deadStock);
-                    tempSimulatedStockDaysSum += (item.sales > 0 ? (simUsable / item.sales) : 0);
-                }
-            });
-            let simulatedAvgStockDays = validTanksCount > 0 ? (tempSimulatedStockDaysSum / validTanksCount) : 0;
-            let deltaAvgStockDays = simulatedAvgStockDays - initialAvgStockDays;
+            // 🧠 คำนวณ Sales-Weighted Stock Day จำลองหลังเพิ่มรถคันนี้
+            let simulatedAddedUsableVolume = trialAllocations.reduce((sum, a) => sum + (a.tankItem.isOutlier ? 0 : a.load), 0);
+            let simulatedWeightedStockDays = totalNetSalesVelocity > 0 ? ((totalNetInitialUsable + totalDispatched + simulatedAddedUsableVolume) / totalNetSalesVelocity) : 0;
+            let currentWeightedStockDays = totalNetSalesVelocity > 0 ? ((totalNetInitialUsable + totalDispatched) / totalNetSalesVelocity) : 0;
+            let deltaWeightedStockDays = simulatedWeightedStockDays - currentWeightedStockDays;
 
-            // 🧠 กฎการตัดสินใจเพิ่มรถตามแนวโน้มราคาน้ำมัน:
+            // 🎯 กฎการตัดสินใจเพิ่มรถตามเงื่อนไขที่กำหนด:
             let allowAdditionalTruck = true;
             if (isAdditionalTruck) {
                 if (currentPriceTrend === 'down') {
-                    // ลง: เพิ่มไม่เกิน 2 วัน
-                    if (deltaAvgStockDays > 2.0) {
+                    // ลง: ค่าเฉลี่ย weighted stock day เพิ่มขึ้นไม่เกิน 2 วัน ให้เพิ่มรถ
+                    if (deltaWeightedStockDays > 2.0) {
                         allowAdditionalTruck = false;
-                        weightComplianceNotes.push(`📉 คันที่ ${tIdx+1} (${truck.plate}): งดเพิ่มรถ (Stock Day เฉลี่ยเพิ่มขึ้น ${deltaAvgStockDays.toFixed(1)} วัน เกินเกณฑ์ 2 วัน)`);
+                        weightComplianceNotes.push(`📉 [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (Weighted Stock Day เพิ่มขึ้น ${deltaWeightedStockDays.toFixed(2)} วัน เกินเกณฑ์ 2.0 วัน)`);
                     }
                 } else if (currentPriceTrend === 'flat') {
-                    // คงที่: เพิ่มไม่เกิน 1 วัน
-                    if (deltaAvgStockDays > 1.0) {
+                    // คงที่: ค่าเฉลี่ย weighted stock day เพิ่มขึ้นไม่เกิน 1 วัน ให้เพิ่มรถ
+                    if (deltaWeightedStockDays > 1.0) {
                         allowAdditionalTruck = false;
-                        weightComplianceNotes.push(`➡️ คันที่ ${tIdx+1} (${truck.plate}): งดเพิ่มรถ (Stock Day เฉลี่ยเพิ่มขึ้น ${deltaAvgStockDays.toFixed(1)} วัน เกินเกณฑ์ 1 วัน)`);
+                        weightComplianceNotes.push(`➡️ [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (Weighted Stock Day เพิ่มขึ้น ${deltaWeightedStockDays.toFixed(2)} วัน เกินเกณฑ์ 1.0 วัน)`);
                     }
                 } else if (currentPriceTrend === 'up') {
-                    // ขึ้น: เพิ่มไม่เกิน 0.5 วัน
-                    if (deltaAvgStockDays > 0.5) {
+                    // ขึ้น: ค่าเฉลี่ย weighted stock day เพิ่มขึ้นไม่เกิน 0.5 วัน ให้เพิ่มรถ
+                    if (deltaWeightedStockDays > 0.5) {
                         allowAdditionalTruck = false;
-                        weightComplianceNotes.push(`📈 คันที่ ${tIdx+1} (${truck.plate}): งดเพิ่มรถ (Stock Day เฉลี่ยเพิ่มขึ้น ${deltaAvgStockDays.toFixed(1)} วัน เกินเกณฑ์ 0.5 วัน)`);
+                        weightComplianceNotes.push(`📈 [คันที่ ${tIdx+1} ${truck.plate}]: งดเพิ่มรถ (Weighted Stock Day เพิ่มขึ้น ${deltaWeightedStockDays.toFixed(2)} วัน เกินเกณฑ์ 0.5 วัน)`);
                     }
                 } else if (currentPriceTrend === 'sure') {
-                    // ขึ้นชัวร์: เพิ่มทุกคันเท่าที่ถังจะรับได้ (allowAdditionalTruck = true เสมอ)
+                    // ขึ้นชัวร์: ให้เพิ่มรถทุกคันเท่าที่ปริมาณความจุถังใต้ดินจะรับได้
+                    allowAdditionalTruck = true;
                 }
             }
 
@@ -1771,7 +1769,7 @@
         if (totalDispatched === 0) {
             statusEl.innerHTML = `<span class="badge badge-warning">ระดับน้ำมันทุกถังพอสำหรับเกณฑ์ความปลอดภัยแล้ว ไม่จำเป็นต้องปล่อยรถ</span>` + noteText;
         } else {
-            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดสรรสำเร็จตามเกณฑ์ราคาและพิกัดน้ำหนัก: โหลดรวม ${totalDispatched.toLocaleString()} ลิตร (ปล่อยรถ ${usedCount} คัน: ${deployedTrucks.map(t=>t.plate).join(', ')})</span>` + noteText;
+            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดสรรสำเร็จตามเกณฑ์ถ่วงน้ำหนัก: โหลดรวม ${totalDispatched.toLocaleString()} ลิตร (ปล่อยรถ ${usedCount} คัน: ${deployedTrucks.map(t=>t.plate).join(', ')})</span>` + noteText;
         }
         
         document.getElementById('dashboard_result').style.display = 'block';
@@ -1817,7 +1815,7 @@
         advBox.innerHTML = `
             <h4 style="margin-top:0; color: #1e293b;">📐 แบบจำลองคณิตศาสตร์ Linear Optimization รวมทุกถัง (Holistic MILP Model & Constraints)</h4>
             <p style="color:#64748b; font-size:12.5px; margin-top:-6px;">
-                แบบจำลองรวมการตัดสินใจจัดสรรกองยานพาหนะ คัดกรองถังผิดปกติ (Outlier Filtering) และควบคุมสต็อกสินค้า:
+                แบบจำลองรวมการตัดสินใจจัดสรรกองยานพาหนะตามเกณฑ์ Sales-Weighted Stock Day และควบคุมพิกัดน้ำหนักตามกฎหมาย:
             </p>
 
             <!-- 1. ตารางเมทริกซ์พารามิเตอร์รวมทุกถัง (อยู่บนสุด) -->
@@ -1873,25 +1871,36 @@
             <!-- 3. ชุดข้อจำกัดของระบบ (System Constraints) -->
             <div class="calc-step-card">
                 <div class="calc-step-title">
-                    <span>⚙️ 2. ชุดข้อจำกัดของระบบ (System Constraints) & การแทนค่าอสมการ</span>
+                    <span>⚙️ 2. ชุดข้อจำกัดของระบบ (System Constraints) & กฎตัดสินใจเพิ่มรถ (Weighted Stock Day)</span>
                 </div>
 
-                <strong>2.1 ข้อจำกัดการคัดกรองถังผิดปกติ (Outlier Filtering Rule):</strong><br>
+                <strong>2.1 สูตรคำนวณและกฎเกณฑ์ Sales-Weighted Stock Day (WSD):</strong><br>
+                $$WSD = \\frac{\\sum_{p \\notin Outlier} \\left( SD_p \\times Sales_p \\right)}{\\sum_{p \\notin Outlier} Sales_p} = \\frac{\\sum_{p \\notin Outlier} US_p}{\\sum_{p \\notin Outlier} Sales_p}$$
+                $$\\Delta WSD = WSD_{\\text{post}} - WSD_{\\text{pre}} \\le \\theta_{\\text{trend}}$$
+                โดยที่เงื่อนไขขีดจำกัดการเพิ่มขึ้นของสต็อกตามแนวโน้มราคาน้ำมัน (\\(\\theta_{\\text{trend}}\\)) คือ:<br>
+                $$\\begin{cases} 
+                \\Delta WSD \\le 2.0 \\text{ วัน}, & \\text{กรณีแนวโน้มราคาลง (Down Trend)} \\\\[4pt]
+                \\Delta WSD \\le 1.0 \\text{ วัน}, & \\text{กรณีแนวโน้มราคาคงที่ (Flat Trend)} \\\\[4pt]
+                \\Delta WSD \\le 0.5 \\text{ วัน}, & \\text{กรณีแนวโน้มราคาขึ้น (Up Trend)} \\\\[4pt]
+                \\text{เพิ่มเต็มความจุถัง (Unlimited)}, & \\text{กรณีแนวโน้มราคาขึ้นชัวร์ (Sure-Hike Trend)}
+                \\end{cases}$$<br>
+
+                <strong>2.2 ข้อจำกัดการคัดกรองถังผิดปกติ (Outlier Filtering Rule):</strong><br>
                 $$x_p = 0 \\quad \\forall p \\in \\text{Outlier} \\quad \\text{where } SD_p \\ge 15.0 \\text{ วัน หรือ } \\left(Sales_p < 300 \\land \\frac{Vol_p}{Cap_p} > 0.60\\right)$$<br>
 
-                <strong>2.2 ข้อจำกัดความต้องการสต็อกปลอดภัยและไม่ล้นถัง (Demand & Ullage Constraints):</strong><br>
+                <strong>2.3 ข้อจำกัดความต้องการสต็อกปลอดภัยและไม่ล้นถัง (Demand & Ullage Constraints):</strong><br>
                 $$\\forall p \\notin \\text{Outlier}: \\quad Need_p \\le x_p \\le Room_p$$
                 แทนค่าอสมการจริงทุกถัง (พิจารณาเกณฑ์สเกลความจุถังเป้าหมาย ${(targetCapacityRatio*100).toFixed(0)}%):<br>
                 ${tankDemandList.map((t, i) => `\\(\\bullet \\quad \\text{ถัง } p=${i+1} \\, (${t.type}): \\quad \\mathbf{${t.minNeedToFill.toLocaleString()}} \\le x_{${i+1}} \\le \\mathbf{${t.roomInTank.toLocaleString()}} \\quad \\text{(จ่ายจริง } x_{${i+1}} = ${t.tankLoad.toLocaleString()}\\text{ L)}\\)`).join('<br>')}<br><br>
 
-                <strong>2.3 ข้อจำกัดความจุช่องบรรทุกแบบไม่กระฉอก (Slosh-Safe Compartment Allocation):</strong><br>
+                <strong>2.4 ข้อจำกัดความจุช่องบรรทุกแบบไม่กระฉอก (Slosh-Safe Compartment Allocation):</strong><br>
                 $$Load_{vc} = \\sum_{p=1}^{P} y_{vc}^{p} \\cdot \\left( V_{vc} - 1000 \\cdot s_{vc} \\right)$$
                 $$\\sum_{p=1}^{P} y_{vc}^{p} \\le 1, \\quad y_{vc}^{p} \\in \\{0, 1\\}, \\quad s_{vc} \\in \\{0, 1\\}$$<br>
 
-                <strong>2.4 ข้อจำกัดบังคับเต็มคันรถสำหรับรถที่เพิ่มเข้ามา (Strict Full-Capacity Rule):</strong><br>
+                <strong>2.5 ข้อจำกัดบังคับเต็มคันรถสำหรับรถที่เพิ่มเข้ามา (Strict Full-Capacity Rule):</strong><br>
                 $$\\sum_{c \\in \\mathcal{C}_v} Load_{vc} = \\text{MaxLegalPayload}_v \\cdot u_v \\quad \\forall v > 1$$<br>
 
-                <strong>2.5 ข้อจำกัดพิกัดน้ำหนักตามความหนาแน่นน้ำมัน (Axle-Load Weight Compliance):</strong><br>
+                <strong>2.6 ข้อจำกัดพิกัดน้ำหนักตามความหนาแน่นน้ำมัน (Axle-Load Weight Compliance):</strong><br>
                 $$V_{v}^{\\text{Diesel}} = \\sum_{p \\in \\text{Diesel}} x_{vp}, \\quad V_{v}^{\\text{Benzene}} = \\sum_{p \\in \\text{Benzene}} x_{vp}$$
                 $$\\begin{cases} 
                 V_{v}^{\\text{Diesel}} \\le 38,000 \\text{ L}, & \\text{ถ้า } V_{v}^{\\text{Benzene}} = 0 \\text{ L} \\\\[4pt]
@@ -1907,6 +1916,7 @@
                 </div>
                 - ปริมาณน้ำมันจัดส่งรวมทั้งสิ้น: \\( \\sum_{p=1}^{P} x_p = \\mathbf{${totalDispatched.toLocaleString()} \\text{ ลิตร}} \\)<br>
                 - จำนวนรถบรรทุกที่เปิดใช้งานจริง: \\( \\sum_{v} u_v = \\mathbf{${usedCount} \\text{ คัน}} \\) (${deployedTrucks.map(t=>t.plate).join(', ')})<br>
+                - ค่า Sales-Weighted Stock Day ก่อนเติม: <strong>${initialWeightedStockDays.toFixed(2)} วัน</strong> | หลังเติม: <strong>${(totalNetSalesVelocity > 0 ? ((totalNetInitialUsable + totalDispatched) / totalNetSalesVelocity) : 0).toFixed(2)} วัน</strong><br>
                 - จำนวนถังที่ถูกตัดออกเนื่องจากเป็น Outlier: <strong>${outlierTanksCount} ถัง</strong><br>
                 - ระยะทางขนส่งรวมทั้งสิ้น (Routing Distance): \\( \\mathbf{${totalDistance.toFixed(2)} \\text{ กิโลเมตร}} \\)<br>
                 - การประเมิน Lead Time คลังต้นทาง (${depot[1]}): <strong>${dpLeadTime} ชั่วโมง</strong> | ต้นทุนค่าระวางรวม: <strong>${(usedCount * dpFreightCost).toLocaleString()} บาท</strong>
@@ -1937,6 +1947,21 @@
                             <td class="unit">ดัชนี</td>
                         </tr>
                         <tr>
+                            <td>\\( WSD \\)</td>
+                            <td class="desc"><strong>ค่าเฉลี่ยสต็อกคงเหลือถ่วงน้ำหนักด้วยยอดขาย (Sales-Weighted Stock Day)</strong> สะท้อนความมั่นคงสต็อกรวม</td>
+                            <td class="unit">วัน</td>
+                        </tr>
+                        <tr>
+                            <td>\\( \\Delta WSD \\)</td>
+                            <td class="desc"><strong>ส่วนต่างของ Weighted Stock Day ที่เพิ่มขึ้น</strong> เมื่อจำลองการปล่อยรถคันเสริม</td>
+                            <td class="unit">วัน</td>
+                        </tr>
+                        <tr>
+                            <td>\\( \\theta_{\\text{trend}} \\)</td>
+                            <td class="desc"><strong>เกณฑ์เพดานการเพิ่มขึ้นของสต็อกสูงสุดที่ยอมรับได้</strong> อิงตามแนวโน้มราคาน้ำมัน (ลง 2.0 / คงที่ 1.0 / ขึ้น 0.5 วัน)</td>
+                            <td class="unit">วัน</td>
+                        </tr>
+                        <tr>
                             <td>\\( Sales_p \\)</td>
                             <td class="desc"><strong>ยอดขายเฉลี่ยต่อวัน</strong> ของน้ำมันในถัง \\(p\\) (Daily Consumption Rate)</td>
                             <td class="unit">ลิตร/วัน</td>
@@ -1963,12 +1988,7 @@
                         </tr>
                         <tr>
                             <td>\\( SD_p \\)</td>
-                            <td class="desc"><strong>จำนวนวันสต็อกคงเหลือ (Stock Days)</strong> ระยะเวลาที่น้ำมันจะพอขาย คำนวณจาก \\(US_p / Sales_p\\)</td>
-                            <td class="unit">วัน</td>
-                        </tr>
-                        <tr>
-                            <td>\\( T_{target} \\)</td>
-                            <td class="desc"><strong>เกณฑ์วันสต็อกปลอดภัยเป้าหมายขั้นต่ำ</strong> ที่ต้องการคงไว้ (Target Days of Supply)</td>
+                            <td class="desc"><strong>จำนวนวันสต็อกคงเหลือเฉพาะถัง (Stock Days)</strong> ระยะเวลาที่น้ำมันในถังจะพอขาย คำนวณจาก \\(US_p / Sales_p\\)</td>
                             <td class="unit">วัน</td>
                         </tr>
                         <tr>
