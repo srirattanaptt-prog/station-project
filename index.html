@@ -46,7 +46,7 @@
         .plan-header-row { margin: 25px 0 12px 0; }
         .plan-title { margin: 0; font-size: 16px; color: #1e293b; }
 
-        /* แผงควบคุมกลยุทธ์ (Strategy Panel - 2 Rows) */
+        /* แผงควบคุมกลยุทธ์ 2 แถว */
         .strategy-control-box { background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 20px; margin-bottom: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
         .strategy-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #f1f5f9; gap: 15px; flex-wrap: wrap; }
         .strategy-row:last-child { border-bottom: none; }
@@ -256,7 +256,7 @@
                 <h4 class="plan-title">📊 แผนการโหลดและจ่ายน้ำมัน (ควบคุมพิกัดน้ำหนักกฎหมายขนส่ง)</h4>
             </div>
 
-            <!-- 🎛️ แผงควบคุมกลยุทธ์ 2 แถว (ถอดสเกลความจุถังออกตามคำขอ) -->
+            <!-- 🎛️ แผงควบคุมกลยุทธ์ 2 แถว -->
             <div class="strategy-control-box">
                 <!-- แถวที่ 1: แนวโน้มราคาน้ำมัน (ลง / คงที่ / ขึ้น / ขึ้นชัวร์) -->
                 <div class="strategy-row">
@@ -491,7 +491,6 @@
         let targetBtn = document.querySelector(`.trend-btn.${trend}`);
         if (targetBtn) targetBtn.classList.add('active');
 
-        // ฟังก์ชัน Trigger คำนวณใหม่เมื่อเปลี่ยนสถานะ
         triggerAutoRecalculate();
     }
 
@@ -504,7 +503,7 @@
         let dpVal = document.getElementById('opt_depot_select').value;
         let selectedStops = collectSelectedStops();
         let targetDays = parseFloat(document.getElementById('scale_stock_days').value);
-        if (dpVal !== "" && selectedStops.length > 0 && !isNaN(targetDays)) {
+        if (dpVal !== "" && selectedStops && selectedStops.length > 0 && !isNaN(targetDays)) {
             calculateAxleDensityCompliantOptimization(selectedStops, dpVal, targetDays);
         }
     }
@@ -857,6 +856,7 @@
         document.getElementById('fleet_total_cap').innerText = totalFleetCap.toLocaleString();
     }
 
+    // Master Data
     function getTankSpecsJSON() {
         let specs = [];
         document.querySelectorAll('#compartments_area .comp-item').forEach(item => {
@@ -1201,12 +1201,12 @@
         }
     }
 
-    function collectSingleStop(cardId) {
+    function collectSingleStop(cardId, showAlert = false) {
         let card = document.getElementById(cardId);
         if (!card) return null;
         let sel = card.querySelector('.opt_station_select');
         if (sel.value === "") {
-            alert("⚠️ กรุณาเลือกปั๊มปลายทางก่อนกดบันทึกครับ");
+            if (showAlert) alert("⚠️ กรุณาเลือกปั๊มปลายทางก่อนกดบันทึกครับ");
             return null;
         }
 
@@ -1228,7 +1228,7 @@
         });
 
         if (hasExceeded) {
-            alert("กรุณาแก้ไขค่าน้ำมันคงเหลือที่เกินความจุถังก่อนดำเนินการ");
+            if (showAlert) alert("กรุณาแก้ไขค่าน้ำมันคงเหลือที่เกินความจุถังก่อนดำเนินการ");
             return null;
         }
 
@@ -1246,7 +1246,7 @@
         let stopCards = document.querySelectorAll('.station-stop-card');
         let selectedStops = [];
         for (let card of stopCards) {
-            let single = collectSingleStop(card.id);
+            let single = collectSingleStop(card.id, false);
             if (single) selectedStops.push(single);
         }
         return selectedStops;
@@ -1369,7 +1369,7 @@
     async function saveSingleStopLogs(cardId) {
         if (!SPREADSHEET_ID) return alert('กรุณาลงชื่อเข้าใช้ Google ก่อนครับ');
 
-        let single = collectSingleStop(cardId);
+        let single = collectSingleStop(cardId, true);
         if (!single) return;
 
         await ensureSheetExists("Tank_Logs", [["Timestamp", "รหัสปั๊ม", "ชื่อปั๊ม", "ปริมาณน้ำมันคงเหลือ & ยอดขาย (JSON)", "หมายเหตุ"]]);
@@ -1466,9 +1466,6 @@
             }
         }
 
-        // 🎯 สเกลเป้าหมายจาก Slider (ไม่ต้องนำไปคำนวณในสูตร Theta แต่ใช้จำกัดการเติมสูงสุดของแต่ละถังแทน)
-        let targetCapacityRatio = (parseFloat(document.getElementById('scale_tank_capacity').value) || 100) / 100;
-
         let tankDemandList = [];
         let outlierTanksCount = 0;
         let totalNetCapacity = 0;
@@ -1496,8 +1493,9 @@
                     totalNetInitialUsable += usableStock;
                 }
 
-                // การคำนวณพื้นที่รับได้
-                let targetCapLimit = (currentPriceTrend === 'sure') ? maxCap : Math.min(maxCap, Math.round(maxCap * targetCapacityRatio));
+                // การคำนวณเป้าหมายความจุตามเกณฑ์วันสต็อก (อิงความจุถังจริง)
+                let minDaysVol = (sales > 0) ? Math.round(deadStock + (sales * targetDays)) : 0;
+                let targetCapLimit = (currentPriceTrend === 'sure') ? maxCap : Math.min(maxCap, minDaysVol);
                 let minNeedToFill = isOutlier ? 0 : Math.max(0, targetCapLimit - currVol);
                 let roomInTank = maxCap - currVol;
 
@@ -1542,16 +1540,18 @@
         else if (currentPriceTrend === 'up') trendStrategyMessage = `📈 <strong>กลยุทธ์ราคาขาขึ้น (Arbitrage Catching):</strong> เพิ่มรถง่ายขึ้น (ΔWSD > \\(\\Theta_{\\text{req}}^*\\)) เพื่อเก็งกำไรส่วนต่างสต็อก`;
         else if (currentPriceTrend === 'sure') trendStrategyMessage = `🚀 <strong>กลยุทธ์ราคาขึ้นชัวร์ (Maximum Windfall):</strong> ปล่อยรถทุกคันเท่าที่ถังจะรับได้ (\\(\\Theta_{\\text{req}}^* = 0\\))!`;
 
-        // 1. จัด Priority: ยอดขายสูงสุดมาก่อน แล้วตามด้วย Stock Day ต่ำกว่า
+        // 🎯 จัด Priority: 1. ยอดขายสูงสุดมาก่อน (Max Sales) -> 2. Stock Day ต่ำกว่า (Min SD)
         tankDemandList.sort((a, b) => {
             if (a.isOutlier !== b.isOutlier) return a.isOutlier ? 1 : -1;
-            if (b.sales !== a.sales) return b.sales - a.sales; // Priority 1: ยอดขาย
-            return a.currentStockDays - b.currentStockDays;    // Priority 2: Stock Day
+            if (b.sales !== a.sales) return b.sales - a.sales; // ลำดับ 1: ยอดขาย
+            return a.currentStockDays - b.currentStockDays;    // ลำดับ 2: Stock Day
         });
 
         let deployedTrucks = [];
         let totalDispatched = 0;
         let weightComplianceNotes = [];
+        let firstTruckDieselTotal = 0;
+        let firstTruckBenzeneTotal = 0;
         let calculatedDeltaWSD = 0;
         let finalApprovalDecisionText = `\\text{รอการตรวจสอบ}`;
         let isDispatchConditionMet = false;
@@ -1637,6 +1637,11 @@
                 }
 
                 if (truckBenzeneTotal === 0 && truckDieselTotal > 38000) weightViolation = true;
+
+                if (tIdx === 0) {
+                    firstTruckDieselTotal = truckDieselTotal;
+                    firstTruckBenzeneTotal = truckBenzeneTotal;
+                }
             }
 
             // คำนวณ Sales-Weighted Stock Day จำลองหลังเพิ่มรถคันนี้ (Marginal Value)
@@ -1692,6 +1697,7 @@
 
         let usedCount = deployedTrucks.length;
         
+        // กำหนดข้อความผลลัพธ์การตัดสินใจระบุจำนวนคันอย่างชัดเจน
         if (usedCount > 0 && isDispatchConditionMet && availableFleet.length > 1) {
             finalApprovalDecisionText = `\\text{ผ่านเกณฑ์ (อนุมัติการออกรถรวม } \\mathbf{${usedCount}} \\text{ คัน)}`;
         } else if (usedCount > 0 && availableFleet.length > 1) {
@@ -1702,6 +1708,7 @@
             finalApprovalDecisionText = `\\text{ไม่ผ่านเกณฑ์ (ระงับการเพิ่มรถ / สต็อกเพียงพอ)}`;
         }
 
+        // แสดงสมการและการทดสอบเงื่อนไขปล่อยรถคันเสริมระบุจำนวนคัน ในกล่อง Callout
         let calloutBox = document.getElementById('smart_strategy_callout');
         if (calloutBox) {
             calloutBox.innerHTML = `
@@ -1903,7 +1910,7 @@
 
                 <strong>3.2 ข้อจำกัดความต้องการสต็อกปลอดภัยและไม่ล้นถัง (Demand & Ullage Constraints):</strong><br>
                 $$\\forall p \\notin \\text{Outlier}: \\quad Need_p \\le x_p \\le Room_p$$
-                แทนค่าอสมการจริงทุกถัง (พิจารณาเกณฑ์สเกลความจุถังเป้าหมาย ${(targetCapacityRatio*100).toFixed(0)}%):<br>
+                แทนค่าอสมการจริงทุกถัง:<br>
                 ${tankDemandList.map((t, i) => `\\(\\bullet \\quad \\text{ถัง } p=${i+1} \\, (${t.type}): \\quad \\mathbf{${t.minNeedToFill.toLocaleString()}} \\le x_{${i+1}} \\le \\mathbf{${t.roomInTank.toLocaleString()}} \\quad \\text{(จ่ายจริง } x_{${i+1}} = ${t.tankLoad.toLocaleString()}\\text{ L)}\\)`).join('<br>')}<br><br>
 
                 <strong>3.3 ข้อจำกัดบังคับเต็มคันรถสำหรับรถที่เพิ่มเข้ามา (Strict Full-Capacity Rule):</strong><br>
