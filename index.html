@@ -46,9 +46,9 @@
         .plan-header-row { margin: 25px 0 12px 0; }
         .plan-title { margin: 0; font-size: 16px; color: #1e293b; }
 
-        /* แผงควบคุมกลยุทธ์ 3 แถว */
+        /* แผงควบคุมกลยุทธ์ (Strategy Panel - 2 Rows) */
         .strategy-control-box { background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 20px; margin-bottom: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
-        .strategy-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #f1f5f9; gap: 15px; flex-wrap: wrap; }
+        .strategy-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #f1f5f9; gap: 15px; flex-wrap: wrap; }
         .strategy-row:last-child { border-bottom: none; }
         .strategy-label { font-size: 13.5px; font-weight: 600; color: #334155; min-width: 180px; }
         
@@ -187,7 +187,7 @@
 
     <!-- MAIN TAB 1: Optimization (หน้าแรก) -->
     <div id="tab-result" class="tab-content active">
-        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Zero-Base Dispatch & Non-Linear Marginal Optimization)</h3>
+        <h3 style="margin-top:0; color:#2e7d32;">✨ คำนวณแผนการจัดส่ง (Dynamic Marginal Strategy Optimization)</h3>
         <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">
             ระบบควบคุมพิกัดน้ำหนัก: <strong>ดีเซลล้วนได้สูงสุด 38,000L</strong> | เบนซิน 4,000L โหลดดีเซลได้ 35,000L | เบนซิน $\ge$ 8,000L โหลดเต็มพิกัด 40,000L พร้อมคัดกรอง Outlier อัตโนมัติ
         </p>
@@ -256,7 +256,7 @@
                 <h4 class="plan-title">📊 แผนการโหลดและจ่ายน้ำมัน (ควบคุมพิกัดน้ำหนักกฎหมายขนส่ง)</h4>
             </div>
 
-            <!-- 🎛️ แผงควบคุมกลยุทธ์ 3 แถว -->
+            <!-- 🎛️ แผงควบคุมกลยุทธ์ 2 แถว (ถอดสเกลความจุถังออกตามคำขอ) -->
             <div class="strategy-control-box">
                 <!-- แถวที่ 1: แนวโน้มราคาน้ำมัน (ลง / คงที่ / ขึ้น / ขึ้นชัวร์) -->
                 <div class="strategy-row">
@@ -269,18 +269,9 @@
                     </div>
                 </div>
 
-                <!-- แถวที่ 2: สเกลความจุถังเป้าหมาย 10% - 100% -->
+                <!-- แถวที่ 2: สเกล Stock Day 1 ถึง Maximum Stock Day -->
                 <div class="strategy-row">
-                    <span class="strategy-label">🎯 แถว 2: สเกลความจุถังเป้าหมาย</span>
-                    <div class="slider-wrapper">
-                        <input type="range" id="scale_tank_capacity" class="strategy-slider" min="10" max="100" step="5" value="50" oninput="updateCapacitySlider(this.value)">
-                        <span id="tag_tank_capacity" class="slider-value-tag">50%</span>
-                    </div>
-                </div>
-
-                <!-- แถวที่ 3: สเกล Stock Day 1 ถึง Maximum Stock Day -->
-                <div class="strategy-row">
-                    <span class="strategy-label">⏱️ แถว 3: สเกล Stock Day ขั้นต่ำ</span>
+                    <span class="strategy-label">⏱️ แถว 2: สเกล Stock Day ขั้นต่ำ</span>
                     <div class="slider-wrapper">
                         <input type="range" id="scale_stock_days" class="strategy-slider" min="1" max="15" step="0.5" value="5.0" oninput="updateStockDaysSlider(this.value)">
                         <span id="tag_stock_days" class="slider-value-tag">5.0 วัน</span>
@@ -305,7 +296,7 @@
                 <tbody id="res_table_body"></tbody>
             </table>
 
-            <button class="btn" style="margin-top: 25px; background-color: #e2e8f0; color: #475569;" onclick="toggleAdvancedInfo()">🔍 Advanced: แสดงวิธีทำ Zero-Base Marginal Optimization พร้อมสมการขั้นสูง (LaTeX)</button>
+            <button class="btn" style="margin-top: 25px; background-color: #e2e8f0; color: #475569;" onclick="toggleAdvancedInfo()">🔍 Advanced: แสดงวิธีทำรวมทุกถังแบบ Linear Optimization พร้อมคำอธิบายตัวแปร (LaTeX)</button>
             
             <div id="advanced_info" class="adv-box" style="display:none;"></div>
         </div>
@@ -500,16 +491,7 @@
         let targetBtn = document.querySelector(`.trend-btn.${trend}`);
         if (targetBtn) targetBtn.classList.add('active');
 
-        let capSlider = document.getElementById('scale_tank_capacity');
-        if (trend === 'down') capSlider.value = 25;
-        else if (trend === 'flat') capSlider.value = 50;
-        else if (trend === 'up') capSlider.value = 75;
-        else if (trend === 'sure') capSlider.value = 100;
-        updateCapacitySlider(capSlider.value);
-    }
-
-    function updateCapacitySlider(val) {
-        document.getElementById('tag_tank_capacity').innerText = `${val}%`;
+        // ฟังก์ชัน Trigger คำนวณใหม่เมื่อเปลี่ยนสถานะ
         triggerAutoRecalculate();
     }
 
@@ -1484,7 +1466,8 @@
             }
         }
 
-        let targetCapacityRatio = (parseFloat(document.getElementById('scale_tank_capacity').value) || 50) / 100;
+        // 🎯 สเกลเป้าหมายจาก Slider (ไม่ต้องนำไปคำนวณในสูตร Theta แต่ใช้จำกัดการเติมสูงสุดของแต่ละถังแทน)
+        let targetCapacityRatio = (parseFloat(document.getElementById('scale_tank_capacity').value) || 100) / 100;
 
         let tankDemandList = [];
         let outlierTanksCount = 0;
@@ -1513,10 +1496,8 @@
                     totalNetInitialUsable += usableStock;
                 }
 
-                let minDaysVol = (sales > 0) ? Math.round(deadStock + (sales * targetDays)) : 0;
-                let trendCapVol = Math.round(maxCap * targetCapacityRatio);
-                let targetCapLimit = Math.min(maxCap, Math.max(minDaysVol, trendCapVol));
-                
+                // การคำนวณพื้นที่รับได้
+                let targetCapLimit = (currentPriceTrend === 'sure') ? maxCap : Math.min(maxCap, Math.round(maxCap * targetCapacityRatio));
                 let minNeedToFill = isOutlier ? 0 : Math.max(0, targetCapLimit - currVol);
                 let roomInTank = maxCap - currVol;
 
@@ -1549,13 +1530,11 @@
         let initialWeightedStockDays = totalNetSalesVelocity > 0 ? (totalNetInitialUsable / totalNetSalesVelocity) : 0;
         let aggregateStockPercent = totalNetCapacity > 0 ? ((totalNetInventory / totalNetCapacity) * 100).toFixed(1) : 0;
 
-        // 🧠 การคำนวณสมการ Zero-Base Non-Linear Marginal Optimization
+        // 🧠 การคำนวณสมการ Zero-Base (ลดตัวแปรความฝืดพื้นที่)
         let kTrendValue = (currentPriceTrend === 'down') ? 2.0 : ((currentPriceTrend === 'flat') ? 1.0 : ((currentPriceTrend === 'up') ? 0.5 : 0.0));
         let lambda = 0.5;
         let uRiskValue = targetDays > 0 ? Math.exp(lambda * ((initialWeightedStockDays / targetDays) - 1.0)) : 1.0;
-        let phi = 1.2;
-        let fCapValue = targetCapacityRatio > 0 ? Math.pow(targetCapacityRatio, -phi) : 1.0;
-        let thetaReq = (kTrendValue * uRiskValue * fCapValue).toFixed(3);
+        let thetaReq = (kTrendValue * uRiskValue).toFixed(3);
 
         let trendStrategyMessage = "";
         if (currentPriceTrend === 'down') trendStrategyMessage = `📉 <strong>กลยุทธ์ราคาขาลง (Zero-Base Check):</strong> เพิ่มรถต่อเมื่อ ΔWSD > \\(\\Theta_{\\text{req}}^*\\) เพื่อป้องกันเงินจมในสต็อกราคาสูง`;
@@ -1563,18 +1542,16 @@
         else if (currentPriceTrend === 'up') trendStrategyMessage = `📈 <strong>กลยุทธ์ราคาขาขึ้น (Arbitrage Catching):</strong> เพิ่มรถง่ายขึ้น (ΔWSD > \\(\\Theta_{\\text{req}}^*\\)) เพื่อเก็งกำไรส่วนต่างสต็อก`;
         else if (currentPriceTrend === 'sure') trendStrategyMessage = `🚀 <strong>กลยุทธ์ราคาขึ้นชัวร์ (Maximum Windfall):</strong> ปล่อยรถทุกคันเท่าที่ถังจะรับได้ (\\(\\Theta_{\\text{req}}^* = 0\\))!`;
 
-        // จัดเรียง Priority: ถังปกติยอดขายสูงสุดมาก่อน
+        // 1. จัด Priority: ยอดขายสูงสุดมาก่อน แล้วตามด้วย Stock Day ต่ำกว่า
         tankDemandList.sort((a, b) => {
             if (a.isOutlier !== b.isOutlier) return a.isOutlier ? 1 : -1;
-            if (b.sales !== a.sales) return b.sales - a.sales;
-            return a.currentStockDays - b.currentStockDays;
+            if (b.sales !== a.sales) return b.sales - a.sales; // Priority 1: ยอดขาย
+            return a.currentStockDays - b.currentStockDays;    // Priority 2: Stock Day
         });
 
         let deployedTrucks = [];
         let totalDispatched = 0;
         let weightComplianceNotes = [];
-        let firstTruckDieselTotal = 0;
-        let firstTruckBenzeneTotal = 0;
         let calculatedDeltaWSD = 0;
         let finalApprovalDecisionText = `\\text{รอการตรวจสอบ}`;
         let isDispatchConditionMet = false;
@@ -1660,11 +1637,6 @@
                 }
 
                 if (truckBenzeneTotal === 0 && truckDieselTotal > 38000) weightViolation = true;
-
-                if (tIdx === 0) {
-                    firstTruckDieselTotal = truckDieselTotal;
-                    firstTruckBenzeneTotal = truckBenzeneTotal;
-                }
             }
 
             // คำนวณ Sales-Weighted Stock Day จำลองหลังเพิ่มรถคันนี้ (Marginal Value)
@@ -1695,7 +1667,7 @@
                     }
                 }
             } else {
-                isDispatchConditionMet = true; // คันแรกมักจะให้ผ่านเสมอถ้ามีความต้องการ
+                isDispatchConditionMet = true; 
             }
 
             let targetFullCapacity = (truckBenzeneTotal === 0) ? Math.min(truck.capacity, 38000) : (truckBenzeneTotal >= 4000 && truckBenzeneTotal < 8000 ? Math.min(truck.capacity, 39000) : truck.capacity);
@@ -1720,7 +1692,6 @@
 
         let usedCount = deployedTrucks.length;
         
-        // กำหนดข้อความผลลัพธ์การตัดสินใจระบุจำนวนคันอย่างชัดเจน
         if (usedCount > 0 && isDispatchConditionMet && availableFleet.length > 1) {
             finalApprovalDecisionText = `\\text{ผ่านเกณฑ์ (อนุมัติการออกรถรวม } \\mathbf{${usedCount}} \\text{ คัน)}`;
         } else if (usedCount > 0 && availableFleet.length > 1) {
@@ -1731,7 +1702,6 @@
             finalApprovalDecisionText = `\\text{ไม่ผ่านเกณฑ์ (ระงับการเพิ่มรถ / สต็อกเพียงพอ)}`;
         }
 
-        // แสดงสมการและการทดสอบเงื่อนไขปล่อยรถคันเสริมระบุจำนวนคัน ในกล่อง Callout
         let calloutBox = document.getElementById('smart_strategy_callout');
         if (calloutBox) {
             calloutBox.innerHTML = `
@@ -1740,7 +1710,7 @@
                     📊 <strong>ข้อมูลสต็อกเครือข่าย:</strong> WSD ปัจจุบัน = <strong>${initialWeightedStockDays.toFixed(2)} วัน</strong> | ปริมาณคงเหลือสุทธิ = <strong>${aggregateStockPercent}%</strong>
                 </span><br>
                 <span style="font-size:12.5px; color:#0369a1; font-weight:600; margin-top:4px; display:inline-block;">
-                    $$\\Theta_{\\text{req}}^* = \\mathcal{K}_{\\text{trend}} \\cdot \\exp\\left( \\lambda \\left[ \\frac{WSD_{\\text{pre}}}{T_{\\text{target}}} - 1 \\right] \\right) \\cdot \\left( \\eta_{\\text{cap}} \\right)^{-\\phi} = ${kTrendValue.toFixed(1)} \\times ${uRiskValue.toFixed(3)} \\times ${fCapValue.toFixed(3)} = \\mathbf{${thetaReq} \\text{ วัน}}$$
+                    $$\\Theta_{\\text{req}}^* = \\mathcal{K}_{\\text{trend}} \\cdot \\exp\\left( \\lambda \\left[ \\frac{WSD_{\\text{pre}}}{T_{\\text{target}}} - 1 \\right] \\right) = ${kTrendValue.toFixed(1)} \\times ${uRiskValue.toFixed(3)} = \\mathbf{${thetaReq} \\text{ วัน}}$$
                 </span><br>
                 <span style="font-size:12.5px; color:#4338ca; font-weight:600; margin-top:2px; display:inline-block;">
                     $$\\Delta WSD = WSD_{\\text{post}} - WSD_{\\text{pre}} = ${calculatedDeltaWSD.toFixed(3)} \\text{ วัน} > \\Theta_{\\text{req}}^* \\, (${thetaReq} \\text{ วัน}) \\implies \\mathbf{${finalApprovalDecisionText}}$$
@@ -1800,7 +1770,7 @@
         if (totalDispatched === 0) {
             statusEl.innerHTML = `<span class="badge badge-warning">ระดับน้ำมันทุกถังพอสำหรับเกณฑ์ความปลอดภัยแล้ว ไม่จำเป็นต้องปล่อยรถ</span>` + noteText;
         } else {
-            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดสรรสำเร็จตามเกณฑ์ Zero-Base Marginal Optimization: โหลดรวม ${totalDispatched.toLocaleString()} ลิตร (ปล่อยรถ ${usedCount} คัน: ${deployedTrucks.map(t=>t.plate).join(', ')})</span>` + noteText;
+            statusEl.innerHTML = `<span class="badge badge-success">✅ จัดสรรสำเร็จตามเกณฑ์ Zero-Base Marginal Optimization: โหลดรวม ${totalDispatched.toLocaleString()} ลิตร (ปล่อยรถ ${usedCount} คัน)</span>` + noteText;
         }
         
         document.getElementById('dashboard_result').style.display = 'block';
@@ -1890,20 +1860,18 @@
             <!-- 2. สถาปัตยกรรมการคำนวณเชิงพลวัต (Mathematical Formulation & Dynamic Threshold Engine) -->
             <div class="calc-step-card" style="border-left: 4px solid #0284c7;">
                 <div class="calc-step-title">
-                    <span>🧠 1. สถาปัตยกรรมการคำนวณขั้นสูง (Zero-Base Non-Linear Marginal Model)</span>
+                    <span>🧠 1. สถาปัตยกรรมการคำนวณเกณฑ์ปล่อยรถเชิงพลวัต (Dynamic Dispatch Threshold Model - DDTM)</span>
                 </div>
-                หลักการ Zero-Base กำหนดให้การปล่อยรถเสริมทุกคันต้องสร้างมูลค่าส่วนเพิ่ม (\\(\\Delta WSD\\)) ชนะค่าความฝืดเชิงพลวัต (\\(\\Theta_{\\text{req}}^*\\)) ซึ่งคำนวณผ่านฟังก์ชันเอ็กซ์โพเนนเชียลและกฎกำลัง (Power-Law):<br>
-                $$\\Theta_{\\text{req}}^* = \\mathcal{K}_{\\text{trend}} \\cdot \\exp\\left( \\lambda \\left[ \\frac{WSD_{\\text{pre}}}{T_{\\text{target}}} - 1 \\right] \\right) \\cdot \\left( \\eta_{\\text{cap}} \\right)^{-\\phi}$$
+                หลักการ Zero-Base กำหนดให้การปล่อยรถเสริมทุกคันต้องสร้างมูลค่าส่วนเพิ่ม (\\(\\Delta WSD\\)) ชนะค่าความฝืดเชิงพลวัต (\\(\\Theta_{\\text{req}}^*\\)) ซึ่งคำนวณผ่านฟังก์ชันเอ็กซ์โพเนนเชียล:<br>
+                $$\\Theta_{\\text{req}}^* = \\mathcal{K}_{\\text{trend}} \\cdot \\exp\\left( \\lambda \\left[ \\frac{WSD_{\\text{pre}}}{T_{\\text{target}}} - 1 \\right] \\right)$$
                 
                 <strong>การแจกแจงองค์ประกอบและแทนค่าตัวเลขจริง (Numerical Substitution):</strong><br>
                 1. <strong>สัมประสิทธิ์ความฝืดด้านราคา (\\(\\mathcal{K}_{\\text{trend}}\\)):</strong> \\(${kTrendValue.toFixed(2)}\\) (สถานะ: ${currentPriceTrend})<br>
                 2. <strong>ดัชนีความเสี่ยงสต็อกแบบเอ็กซ์โพเนนเชียล (\\(\\mathcal{U}_{\\text{risk}}\\)):</strong> ปรับตัวแบบ Non-linear ตาม Risk Aversion (\\(\\lambda = 0.5\\))<br>
                 $$\\mathcal{U}_{\\text{risk}} = e^{0.5 \\times \\left(\\frac{${initialWeightedStockDays.toFixed(2)}}{${targetDays.toFixed(1)}} - 1\\right)} = \\mathbf{${uRiskValue.toFixed(3)}}$$
-                3. <strong>ดัชนีความยืดหยุ่นเชิงพื้นที่ (\\(\\mathcal{F}_{\\text{cap}}\\)):</strong> ควบคุมด้วยความยืดหยุ่นเชิงพื้นที่ (Spatial Elasticity \\(\\phi = 1.2\\))<br>
-                $$\\mathcal{F}_{\\text{cap}} = \\left( ${(targetCapacityRatio).toFixed(2)} \\right)^{-1.2} = \\mathbf{${fCapValue.toFixed(3)}}$$<br>
-
+                
                 <strong>ผลลัพธ์เกณฑ์ต้านทานการเรียกรถที่แท้จริง (Dynamic Threshold):</strong><br>
-                $$\\Theta_{\\text{req}}^* = ${kTrendValue.toFixed(2)} \\times ${uRiskValue.toFixed(3)} \\times ${fCapValue.toFixed(3)} = \\mathbf{${thetaReq} \\text{ วัน}}$$
+                $$\\Theta_{\\text{req}}^* = ${kTrendValue.toFixed(2)} \\times ${uRiskValue.toFixed(3)} = \\mathbf{${thetaReq} \\text{ วัน}}$$
 
                 <strong>การทดสอบเงื่อนไขอนุมัติคันเสริม (Final Zero-Base Dispatch Condition):</strong><br>
                 $$\\Delta WSD = WSD_{\\text{post}} - WSD_{\\text{pre}} = \\mathbf{${calculatedDeltaWSD.toFixed(3)} \\text{ วัน}}$$
@@ -1915,7 +1883,9 @@
                 <div class="calc-step-title">
                     <span>🎯 2. ฟังก์ชันเป้าหมายของระบบ (Global Objective Function)</span>
                 </div>
-                มุ่งเน้นการจัดสรรน้ำมันลงในถังปกติที่มียอดขายสูงสุดเพื่อเร่งรอบหมุนเวียนสต็อก โดยหักถังที่เป็น Outlier ออก:<br>
+                มุ่งเน้นการจัดสรรน้ำมันลงในถังปกติ โดยมีกฎ Priority ในการเติมน้ำมันลงถังดังนี้:<br>
+                <strong>Priority 1:</strong> จัดเรียงถังตาม <strong>ยอดขายเฉลี่ย (Sales Rate) จากมากไปน้อย</strong> เป็นหลัก<br>
+                <strong>Priority 2:</strong> หากยอดขายเท่ากัน จะตัดสินด้วย <strong>จำนวนวันสต็อกคงเหลือ (Stock Days) ที่น้อยกว่า</strong><br>
                 $$\\max Z = \\sum_{p \\notin \\text{Outlier}} \\left( Sales_p \\cdot x_p \\right) - \\sum_{v \\in \\mathcal{V}} \\left( F_v \\cdot u_v \\right)$$
                 
                 <strong>แทนค่าสัมประสิทธิ์ตัวเลขจริงในระบบ:</strong><br>
@@ -1996,8 +1966,18 @@
                         </tr>
                         <tr>
                             <td>\\( \\Theta_{\\text{req}}^* \\)</td>
-                            <td class="desc"><strong>เกณฑ์วันสต็อกขั้นต่ำที่ต้องเพิ่มขึ้นเชิงพลวัตแบบไม่เชิงเส้น (Zero-Base Marginal Threshold)</strong> คำนวณจาก 3 แถวรวมกัน</td>
+                            <td class="desc"><strong>เกณฑ์วันสต็อกขั้นต่ำที่ต้องเพิ่มขึ้นเชิงพลวัตแบบไม่เชิงเส้น (Zero-Base Marginal Threshold)</strong></td>
                             <td class="unit">วัน</td>
+                        </tr>
+                        <tr>
+                            <td>\\( \\mathcal{K}_{\\text{trend}} \\)</td>
+                            <td class="desc"><strong>สัมประสิทธิ์ความฝืดด้านราคา (Econometric Friction)</strong> อิงตามแนวโน้มราคาน้ำมัน (ลง 2.0 / คงที่ 1.0 / ขึ้น 0.5)</td>
+                            <td class="unit">หน่วย</td>
+                        </tr>
+                        <tr>
+                            <td>\\( \\mathcal{U}_{\\text{risk}} \\)</td>
+                            <td class="desc"><strong>ดัชนีความเร่งด่วนของสต็อก (Inventory Urgency Index)</strong> รูปแบบเอ็กซ์โพเนนเชียล</td>
+                            <td class="unit">หน่วย</td>
                         </tr>
                         <tr>
                             <td>\\( Sales_p \\)</td>
@@ -2031,7 +2011,7 @@
                         </tr>
                         <tr>
                             <td>\\( TargetVol_p \\)</td>
-                            <td class="desc"><strong>ระดับปริมาตรเป้าหมายหลังเติม</strong> เพื่อให้ครอบคลุมเกณฑ์วันปลอดภัย \\(T_{target}\\) และสเกล % ถัง</td>
+                            <td class="desc"><strong>ระดับปริมาตรเป้าหมายหลังเติม</strong> เพื่อให้ครอบคลุมเกณฑ์วันปลอดภัย \\(T_{target}\\)</td>
                             <td class="unit">ลิตร</td>
                         </tr>
                         <tr>
